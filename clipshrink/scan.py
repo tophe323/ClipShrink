@@ -25,6 +25,7 @@ class MediaInfo:
     color_primaries: str = ""
     color_trc: str = ""
     audio_codecs: list = field(default_factory=list)
+    video_start: float = 0.0    # seconds after the file's start where the picture begins
 
     @property
     def group(self):
@@ -40,7 +41,9 @@ class ScanResult:
 
 
 def probe_file(path):
-    r = tools.run([tools.ffprobe(), "-v", "error", "-show_streams", "-show_format", "-of", "json", str(path)])
+    # Read far enough to find a picture that starts well after the sound; quick files stop early anyway.
+    r = tools.run([tools.ffprobe(), "-v", "error", "-analyzeduration", "120M", "-probesize", "200M",
+                   "-show_streams", "-show_format", "-of", "json", str(path)])
     if r.returncode:
         raise ValueError((r.stderr.strip().splitlines() or ["cannot read file"])[-1])
     data = json.loads(r.stdout)
@@ -55,6 +58,10 @@ def probe_file(path):
     except (ValueError, ZeroDivisionError):
         fps = 0.0
     dur = float(v.get("duration") or data["format"].get("duration") or 0)
+    try:    # some recordings (Webex, screen captures) start the picture after the sound
+        start = max(0.0, float(v["start_time"]) - float(data["format"]["start_time"]))
+    except (KeyError, ValueError):
+        start = 0.0
     if "bit_rate" in v:
         video_bytes = int(int(v["bit_rate"]) * dur / 8)
     else:
@@ -66,7 +73,8 @@ def probe_file(path):
                      pix_fmt=v.get("pix_fmt", ""), color_range=v.get("color_range", ""),
                      color_space=v.get("color_space", ""), color_primaries=v.get("color_primaries", ""),
                      color_trc=v.get("color_transfer", ""),
-                     audio_codecs=[s.get("codec_name") for s in data["streams"] if s["codec_type"] == "audio"])
+                     audio_codecs=[s.get("codec_name") for s in data["streams"] if s["codec_type"] == "audio"],
+                     video_start=start)
 
 
 _TAGS = re.compile(r"^(?P<stem>.+?)(?:_\((?:4k|1080p|720p)\))?_\((?:h265|av1)\)(?:_\d+)?$|"

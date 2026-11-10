@@ -99,6 +99,7 @@ REASONS = [N_(t) for t in (
     "could not read a sample from the file: {detail}",
     "the VMAF comparison could not run: {detail}",
     "the VMAF comparison returned no frames",
+    "FFmpeg stopped with code {code}",
     "the original changed while it was being converted",
     "Conversion is not smaller ({out} vs {src} bytes), original kept.",
     "Conversion did not match the original, original kept: {problems}",

@@ -7,10 +7,11 @@ from pathlib import Path
 
 _COLS = ["source", "status", "reason", "source_size", "source_mtime_ns", "output", "output_size", "output_mtime_ns",
          "output_sha256", "vmaf_mean", "vmaf_p1", "encoder", "quality", "encode_runs", "updated", "codec", "source_width",
-         "source_height", "output_width", "output_height", "duration", "target_mean", "target_p1"]
+         "source_height", "output_width", "output_height", "duration", "target_mean", "target_p1", "started", "finished"]
 _ADDED = {"codec": "TEXT DEFAULT ''", "source_width": "INT DEFAULT 0", "source_height": "INT DEFAULT 0",
           "output_width": "INT DEFAULT 0", "output_height": "INT DEFAULT 0", "duration": "REAL DEFAULT 0",
-          "target_mean": "REAL DEFAULT 0", "target_p1": "REAL DEFAULT 0"}
+          "target_mean": "REAL DEFAULT 0", "target_p1": "REAL DEFAULT 0", "started": "REAL DEFAULT 0",
+          "finished": "REAL DEFAULT 0"}
 
 
 @dataclass
@@ -38,6 +39,8 @@ class Record:
     duration: float = 0.0
     target_mean: float = 0.0    # the values this file was judged by. 0 means the defaults.
     target_p1: float = 0.0
+    started: float = 0.0        # when its conversion began and ended, as time.time()
+    finished: float = 0.0
 
     @property
     def warn_mean(self):
@@ -68,7 +71,8 @@ def _prepare(c):
         source_size INT, source_mtime_ns INT, output TEXT, output_size INT, output_mtime_ns INT, output_sha256 TEXT,
         vmaf_mean REAL, vmaf_p1 REAL, encoder TEXT, quality REAL, encode_runs INT, updated REAL, codec TEXT DEFAULT '',
         source_width INT DEFAULT 0, source_height INT DEFAULT 0, output_width INT DEFAULT 0, output_height INT DEFAULT 0,
-        duration REAL DEFAULT 0, target_mean REAL DEFAULT 0, target_p1 REAL DEFAULT 0)""")
+        duration REAL DEFAULT 0, target_mean REAL DEFAULT 0, target_p1 REAL DEFAULT 0, started REAL DEFAULT 0,
+        finished REAL DEFAULT 0)""")
     have = {row[1] for row in c.execute("PRAGMA table_info(files)")}
     for name, kind in _ADDED.items():       # older databases gain the new columns
         if name not in have:

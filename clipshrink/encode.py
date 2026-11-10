@@ -200,7 +200,8 @@ def measure_vmaf(distorted, reference, info, work_dir, gate=None, on_time=None, 
                            cwd=str(work_dir))
     path = Path(work_dir) / log
     if code or not path.exists():
-        raise RuntimeError(f"the VMAF comparison could not run: {err.strip()[-300:]}")
+        detail = err.strip()[-300:] or f"FFmpeg stopped with code {code if code < 2**31 else hex(code)}"
+        raise RuntimeError(f"the VMAF comparison could not run: {detail}")
     frames = json.loads(path.read_text())["frames"]
     path.unlink()
     if not frames:
@@ -215,19 +216,27 @@ def measure_vmaf(distorted, reference, info, work_dir, gate=None, on_time=None, 
 
 def cut_segments(src, info, work_dir, count=3, seconds=4.0, gate=None):
     """Copies short pieces of the file, untouched, to the work folder.
-    Short files are used whole."""
+    Short files are used whole, and so is any file whose pieces come out without a picture."""
     if info.duration <= count * seconds * 1.5:
         return [(0.0, Path(src))]
     out = []
     for i in range(count):
-        at = info.duration * (i + 1) / (count + 1)
+        at = getattr(info, "video_start", 0.0) + info.duration * (i + 1) / (count + 1)
         seg = Path(work_dir) / f"seg_{i}.mp4"
         code, err = run_ffmpeg(["-y", "-ss", f"{at:.3f}", "-i", src, "-t", f"{seconds:.3f}", "-map", "0:v:0",
                                 "-c", "copy", "-an", "-sn", "-dn", "-map_metadata", "-1", seg], gate)
         if code:
             raise RuntimeError(f"could not read a sample from the file: {err.strip()[-300:]}")
+        if not _has_picture(seg):
+            return [(0.0, Path(src))]
         out.append((at, seg))
     return out
+
+
+def _has_picture(path):
+    r = tools.run([tools.ffprobe(), "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=index",
+                   "-of", "csv=p=0", str(path)])
+    return r.returncode == 0 and r.stdout.strip() != ""
 
 
 @dataclass

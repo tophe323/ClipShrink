@@ -2,6 +2,18 @@
 
 Every released version of ClipShrink, newest first. The authoritative file is [CHANGELOG.md on GitHub](https://github.com/tophe323/ClipShrink/blob/main/CHANGELOG.md).
 
+## 1.7.1 - 2026-11-10
+
+### Added
+- **Reports show times:** when each file started and finished, and how long it took. Under the table, the batch's start, end and total time, the encoder, and the PC's graphics card, processor and Windows version.
+
+### Fixed
+- **Reports open in columns in Excel** on PCs set to French, Dutch, German and other languages that separate lists with `;`. Reports now use the PC's own separator and decimal symbol.
+- **Videos whose picture starts after the sound**, such as some Webex recordings, failed with "Stream map '' matches no streams". They now convert, and stay in sync.
+- **.MTS camcorder files** all failed with "invalid literal for int()". They now convert.
+- **Some phone videos kept their original** with "duration differs" by a few hundredths of a second, although no frame was lost. The check now compares the time of every frame's start, first to last, instead of the length the file reports, which an encoder's start delay can skew. A conversion that really changes timing is still refused.
+- **A failed VMAF comparison now says why**, with FFmpeg's exit code, instead of an empty reason.
+
 ## 1.7 - 2026-11-07
 
 ### Added

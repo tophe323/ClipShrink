@@ -173,7 +173,8 @@ class Converter:
                 finished.append(path)
                 try:
                     report = reports.write_batch_report(reports.reports_dir(self.db_path),
-                                                        [self.record(p) for p in finished], report)
+                                                        [self.record(p) for p in finished], report,
+                                                        batch={"started": started, "encoder": self.encoder})
                 except OSError:
                     pass    # a report that can't be written must never stop the conversions
                 self.on_event({"type": "file_done", "path": path, "record": self.record(path)})
@@ -201,10 +202,12 @@ class Converter:
         rec.status = "encoding"
         rec.reason = ""
         rec.encoder = self.encoder
+        rec.started, rec.finished = time.time(), 0.0
         db.save(self.db_path, rec)
         try:
             self._convert_inner(rec, work, progress)
         except encode.Stopped:
+            rec.started = 0.0
             raise
         except Verdict as v:
             self._finish_kept(rec, v)
@@ -216,6 +219,8 @@ class Converter:
             shutil.rmtree(work, ignore_errors=True)
             for part in _part_files(src):
                 part.unlink(missing_ok=True)
+        rec.finished = time.time()
+        db.save(self.db_path, rec)
 
     def _finish_kept(self, rec, v):
         rec.status = "kept_original"
@@ -316,10 +321,12 @@ class Converter:
             problems.append("colour range differs")
         if out.audio_codecs != info.audio_codecs:
             problems.append("audio tracks differ")
+        # Every frame must keep its time. The span from the first frame to the last is compared,
+        # not the container's duration, which an encoder's start delay (edit list) can skew.
         frame = 1 / (info.fps or 30)
-        if abs(out.duration - info.duration) > frame:
-            problems.append(f"duration differs ({out.duration:.3f}s vs {info.duration:.3f}s)")
-        nf_a, nf_b = self._packet_count(src), self._packet_count(built)
+        (nf_a, span_a), (nf_b, span_b) = self._timeline(src), self._timeline(built)
+        if abs(span_b - span_a) > frame / 2:
+            problems.append(f"duration differs ({span_b:.3f}s vs {span_a:.3f}s)")
         if nf_a != nf_b:
             problems.append(f"frame count differs ({nf_b} vs {nf_a})")
         if Path(src).suffix.lower() in config.GRAFT_EXTS:
@@ -337,10 +344,19 @@ class Converter:
         return score
 
     @staticmethod
-    def _packet_count(path):
-        r = tools.run([tools.ffprobe(), "-v", "error", "-select_streams", "v:0", "-count_packets",
-                       "-show_entries", "stream=nb_read_packets", "-of", "csv=p=0", str(path)])
-        return int(r.stdout.strip().split(",")[0]) if r.returncode == 0 and r.stdout.strip() else -1
+    def _timeline(path):
+        """(frames, seconds from the first frame's time to the last's) of the video track.
+        Read from every packet, so MPEG-TS files, which list streams twice, count once."""
+        r = tools.run([tools.ffprobe(), "-v", "error", "-select_streams", "v:0", "-show_entries", "packet=pts_time",
+                       "-of", "csv=p=0", str(path)])
+        times = []
+        for x in r.stdout.split() if r.returncode == 0 else []:
+            try:
+                times.append(float(x.strip(",")))
+            except ValueError:
+                pass        # a packet without a time ("N/A") still counts below
+        count = sum(1 for x in r.stdout.split() if x.strip(",")) if r.returncode == 0 else -1
+        return count, (max(times) - min(times)) if times else -1.0
 
     def _finish(self, rec, built, info, score, src_stat, gate):
         """The search is over: apply the warning values and the minimum to the result."""

@@ -49,7 +49,7 @@ Whether a file is already done is decided from the folder. A scan treats an H.26
 
 ## The state database
 
-The file is `%LOCALAPPDATA%\ClipShrink\state.db`, a SQLite database in WAL mode with full synchronous writes. It has one table, `files`, keyed by the source path (case-insensitive), with the status, reason, size and modified time of the source and the output, the output's SHA-256, both VMAF values, the encoder, the quality setting, the number of encodes, the format, both sizes, the duration and the values it was judged by. Older databases gain these columns automatically.
+The file is `%LOCALAPPDATA%\ClipShrink\state.db`, a SQLite database in WAL mode with full synchronous writes. It has one table, `files`, keyed by the source path (case-insensitive), with the status, reason, size and modified time of the source and the output, the output's SHA-256, both VMAF values, the encoder, the quality setting, the number of encodes, the format, both sizes, the duration, the values it was judged by, and when its conversion started and finished. Older databases gain these columns automatically.
 
 | Status | Shown as |
 |---|---|

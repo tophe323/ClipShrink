@@ -482,9 +482,9 @@ def test_reports_are_written_in_the_language(workspace):
     finally:
         i18n.set_language("en")
     with open(path, encoding="utf-8-sig") as f:
-        head, row = list(csv.reader(f))
-    assert head[:5] == ["Fecha", "Archivo", "Carpeta", "Resultado", "Motivo"]
-    assert row[3] == "Original conservado" and row[4].startswith("La conversión no es más pequeña")
+        head, row = list(csv.reader(f))[:2]
+    assert head[:7] == ["Inicio", "Fin", "Duración", "Archivo", "Carpeta", "Resultado", "Motivo"]
+    assert row[5] == "Original conservado" and row[6].startswith("La conversión no es más pequeña")
 
 
 def test_the_pill_colour_doesnt_depend_on_the_language(review):
@@ -543,7 +543,7 @@ def test_translations_say_they_are_unchecked():
         assert "Not yet checked by a native speaker" in head
 
 
-def test_version_is_1_7():
+def test_version_is_1_7_1():
     from clipshrink import config
     iss = (ROOT / "installer" / "clipshrink.iss").read_text(encoding="utf-8-sig")
-    assert config.VERSION == "1.7" and "AppVersion=1.7\n" in iss
+    assert config.VERSION == "1.7.1" and "AppVersion=1.7.1\n" in iss

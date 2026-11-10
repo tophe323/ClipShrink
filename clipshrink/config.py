@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from .i18n import N_, g, tr
 
 APP_NAME = "ClipShrink"
-VERSION = "1.7"
+VERSION = "1.7.1"
 PROJECT_URL = "https://github.com/tophe323/ClipShrink"
 DOCS_URL = "https://tophe323.github.io/ClipShrink/"
 ADVANCED_DOCS_URL = DOCS_URL + "user-guide/advanced-settings/"

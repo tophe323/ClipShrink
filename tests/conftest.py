@@ -59,3 +59,18 @@ def copy_preserving(src, dst):
     c, m = get_times(src)
     set_times(dst, c, m)
     return Path(dst)
+
+
+@pytest.fixture(autouse=True)
+def plain_csv(monkeypatch):
+    """Reports follow the PC's regional format; tests read them the same way everywhere."""
+    from clipshrink import reports
+    monkeypatch.setattr(reports, "regional_format", lambda: (",", "."))
+
+
+def report_rows(path):
+    """The table of a report, without the batch summary under it."""
+    import csv
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        lines = f.read().split("\r\n\r\n")[0]
+    return list(csv.DictReader(lines.splitlines()))

@@ -64,7 +64,7 @@ In words:
 - The "smaller" check runs before the VMAF check. A file that is both bigger and low quality is refused, never warned about.
 - If a stricter retry turns out not to be smaller or not to match, the earlier below-target attempt is delivered with its warning.
 - The "best" attempt is the most recent (strictest) one, not the highest-scoring one.
-- "Properties and tracks match" covers: HEVC codec, resolution, pixel format, colour range, audio codec list, duration (within one frame), and video packet count. For `.mp4`, `.mov`, `.m4v` and `.lrv` it also compares the other tracks and camera info; see [GoPro data](gopro-data.md).
+- "Properties and tracks match" covers: HEVC codec, resolution, pixel format, colour range, audio codec list, timing, and video packet count. Timing is the span from the first video packet's time to the last's, which must match within half a frame. The container's duration isn't used, because an encoder's start delay (edit list) can shift it although every frame keeps its time. For `.mp4`, `.mov`, `.m4v` and `.lrv` it also compares the other tracks and camera info; see [GoPro data](gopro-data.md).
 - The estimate's "Meets the quality target?" column uses the warning values without the 0.5 margin.
 
 ## Measured example

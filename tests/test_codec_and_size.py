@@ -224,7 +224,7 @@ def test_report_lists_codec_resolution_and_bitrate(get_clip, workspace):
     src = copy_preserving(get_clip("uhd_4k_telemetry"), workspace / "videos" / "a.mp4")
     convert(src, workspace, "x265", "h265", "1080p")
     rep = next(reports_dir(workspace / "work" / "state.db").glob("*.csv"))
-    with open(rep, newline="", encoding="utf-8-sig") as f:
-        row = next(csv.DictReader(f))
+    from conftest import report_rows
+    row = report_rows(rep)[0]
     assert row["Codec"] == "H.265" and row["Output resolution"] == "1920x1080" and float(row["Output bitrate (Mbit/s)"]) > 0
     assert row["Result"] == "Resized"

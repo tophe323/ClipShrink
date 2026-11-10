@@ -52,8 +52,8 @@ def test_crash_then_resume_skips_finished_files(get_clip, workspace):
     from clipshrink.reports import reports_dir
     kept = list(reports_dir(db).glob("*.csv"))
     assert len(kept) == 1, "a crash must not lose the report of finished files"
-    with open(kept[0], newline="", encoding="utf-8-sig") as f:
-        assert len(list(csv.DictReader(f))) == 1
+    from conftest import report_rows
+    assert len(report_rows(kept[0])) == 1
     out = Path(done[0].output)
     stamp = (out.stat().st_mtime_ns, out.stat().st_ctime_ns, sha256(out))
 

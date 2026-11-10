@@ -22,7 +22,7 @@ def keys():
     import sys
     sys.path.insert(0, str(ROOT))
     from clipshrink import config, i18n, reports
-    messages |= set(i18n.REASONS) | set(reports.COLUMNS) | {config.QUALITY_EXPLANATION}
+    messages |= set(i18n.REASONS) | set(reports.COLUMNS) | set(reports.SUMMARY) | {config.QUALITY_EXPLANATION}
     return messages, plurals
 
 

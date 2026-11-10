@@ -222,8 +222,8 @@ def test_report_records_the_values_used(get_clip, workspace):
     src = copy_preserving(get_clip("no_audio_no_telemetry"), workspace / "videos" / "a.mp4")
     _convert(src, workspace, QualityPolicy(10, 5), ladder=[51])
     rep = next(reports_dir(workspace / "work" / "state.db").glob("*.csv"))
-    with open(rep, newline="", encoding="utf-8-sig") as f:
-        row = next(csv.DictReader(f))
+    from conftest import report_rows
+    row = report_rows(rep)[0]
     assert float(row["Target average"]) == 10 and float(row["Target worst 1%"]) == 5
 
 
