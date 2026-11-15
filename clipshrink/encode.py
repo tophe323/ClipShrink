@@ -59,12 +59,38 @@ class Gate:
             self._proc = None
 
 
+@dataclass
+class Run:
+    """How long one FFmpeg run took: getting going, then the steady part, in seconds
+    of clock time (wall) for seconds of video (media)."""
+    startup: float = 0.0
+    wall: float = 0.0
+    media: float = 0.0
+    total: float = 0.0
+
+    @property
+    def steady_rate(self):
+        """Clock seconds per second of video once running, or None if too short to tell."""
+        return self.wall / self.media if self.media >= 0.5 and self.wall > 0 else None
+
+
+_runs = threading.local()
+
+
+def last_run():
+    """Timing of the last FFmpeg run on this thread."""
+    return getattr(_runs, "last", Run())
+
+
 def run_ffmpeg(args, gate=None, on_time=None, cwd=None):
     """Runs FFmpeg with a progress feed. Returns (returncode, stderr tail)."""
     if gate:
         gate.checkpoint()
-    cmd = [tools.ffmpeg(), "-hide_banner", "-nostdin", "-v", "error", "-progress", "pipe:1", "-nostats"]
+    cmd = [tools.ffmpeg(), "-hide_banner", "-nostdin", "-v", "error", "-progress", "pipe:1", "-stats_period", "0.1",
+           "-nostats"]
     cmd += [str(a) for a in args]
+    t0 = time.time()
+    first = last = None       # (clock, video seconds) of the first and last progress line
     p = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
                          encoding="utf-8", errors="replace", creationflags=tools.NOWIN, cwd=cwd)
     tools.bind_to_us(p)
@@ -75,11 +101,19 @@ def run_ffmpeg(args, gate=None, on_time=None, cwd=None):
     t.start()
     try:
         for line in p.stdout:
-            if on_time and line.startswith("out_time_us="):
+            if line.startswith("out_time_us="):
                 v = line.split("=")[1].strip()
-                if v.lstrip("-").isdigit():
-                    on_time(int(v) / 1e6)
+                if v.lstrip("-").isdigit() and int(v) > 0:
+                    last = (time.time(), int(v) / 1e6)
+                    first = first or last
+                    if on_time:
+                        on_time(last[1])
         p.wait()
+        end = time.time()
+        if first:
+            _runs.last = Run(first[0] - t0, last[0] - first[0], last[1] - first[1], end - t0)
+        else:
+            _runs.last = Run(end - t0, 0.0, 0.0, end - t0)
     finally:
         if gate:
             gate.detach()
@@ -130,9 +164,32 @@ def resolve_encoder(name, codec="h265"):
     return name
 
 
+def out_range(info):
+    """Older formats come out at limited range, like nearly all video; H.264 keeps its own."""
+    return "tv" if getattr(info, "legacy", False) else info.color_range
+
+
+def frames_per_frame(info):
+    """2 when each interlaced frame becomes two, one per field."""
+    return 2 if getattr(info, "deinterlace", False) else 1
+
+
+def picture_filters(info, target=None):
+    """The same steps for the conversion and for the copy of the original it is compared with:
+    deinterlace, shrink, then 8-bit 4:2:0 at limited range for older formats."""
+    steps = []
+    if getattr(info, "deinterlace", False):
+        steps.append("bwdif=mode=send_field:parity=auto:deint=all")
+    if target:
+        steps.append(_scale(target))
+    if getattr(info, "legacy", False):
+        steps.append("scale=out_range=tv:flags=lanczos,format=yuv420p")
+    return steps
+
+
 def encoder_args(encoder, q, info):
     color = []
-    for flag, val in (("-color_range", info.color_range), ("-colorspace", info.color_space),
+    for flag, val in (("-color_range", out_range(info)), ("-colorspace", info.color_space),
                       ("-color_primaries", info.color_primaries), ("-color_trc", info.color_trc)):
         if val and val != "unknown":
             color += [flag, val]
@@ -160,10 +217,13 @@ def _scale(target):
 
 def encode_video(src, out, encoder, q, info, gate=None, on_time=None, target=None):
     """Video track only. Every timestamp is kept: no frames added or dropped."""
+    # One frame per field needs the filter's finer clock: the original's can't hold half a frame.
+    clock = "filter" if getattr(info, "deinterlace", False) else "demux"
     args = ["-y", "-noautorotate", "-i", src, "-map", "0:v:0", "-an", "-sn", "-dn", "-map_metadata", "-1",
-            "-fps_mode", "passthrough", "-enc_time_base", "demux"]
-    if target:
-        args += ["-vf", _scale(target)]
+            "-fps_mode", "passthrough", "-enc_time_base", clock]
+    steps = picture_filters(info, target)
+    if steps:
+        args += ["-vf", ",".join(steps)]
     args += encoder_args(encoder, q, info) + [out]
     return run_ffmpeg(args, gate, on_time)
 
@@ -193,8 +253,10 @@ def measure_vmaf(distorted, reference, info, work_dir, gate=None, on_time=None, 
     models = "version=vmaf_v0.6.1\\:name=hd" + ("|version=vmaf_4k_v0.6.1\\:name=uhd" if big else "")
     log = "vmaf.json"
     threads = max(2, (os.cpu_count() or 4) - 2)
-    graph = ("[0:v]setpts=PTS-STARTPTS[d];[1:v]setpts=PTS-STARTPTS" + (f",{_scale(target)}" if target else "") + "[r];"
-             f"[d][r]libvmaf=log_fmt=json:log_path={log}:n_threads={threads}:model='{models}'")
+    ref = "".join("," + s for s in picture_filters(info, target))
+    graph = ("[0:v]setpts=PTS-STARTPTS[d];[1:v]setpts=PTS-STARTPTS" + ref + "[r];"
+             # nearest: Matroska rounds times to the millisecond, so 0.033 must still pair with 0.0333
+             f"[d][r]libvmaf=log_fmt=json:log_path={log}:n_threads={threads}:ts_sync_mode=nearest:model='{models}'")
     code, err = run_ffmpeg(["-noautorotate", "-i", Path(distorted).resolve(), "-noautorotate", "-i",
                             Path(reference).resolve(), "-lavfi", graph, "-f", "null", "-"], gate, on_time,
                            cwd=str(work_dir))
@@ -222,7 +284,8 @@ def cut_segments(src, info, work_dir, count=3, seconds=4.0, gate=None):
     out = []
     for i in range(count):
         at = getattr(info, "video_start", 0.0) + info.duration * (i + 1) / (count + 1)
-        seg = Path(work_dir) / f"seg_{i}.mp4"
+        # Matroska takes any format; .mp4 can't hold DV
+        seg = Path(work_dir) / f"seg_{i}{'.mp4' if info.codec == 'h264' else '.mkv'}"
         code, err = run_ffmpeg(["-y", "-ss", f"{at:.3f}", "-i", src, "-t", f"{seconds:.3f}", "-map", "0:v:0",
                                 "-c", "copy", "-an", "-sn", "-dn", "-map_metadata", "-1", seg], gate)
         if code:
@@ -247,6 +310,8 @@ class SampleRow:
     score: Score
     encode_seconds: float
     vmaf_seconds: float
+    encode_run: Run = field(default_factory=Run)
+    vmaf_run: Run = field(default_factory=Run)
 
 
 @dataclass
@@ -268,11 +333,11 @@ def search_quality(segments, encoder, ladder, info, work_dir, guess=None, gate=N
             out = Path(work_dir) / f"try_{i}_{n}.mp4"
             t0 = time.time()
             code, err = encode_video(seg, out, encoder, ladder[i], info, gate, target=target)
-            t1 = time.time()
+            t1, enc_run = time.time(), last_run()
             if code or not out.exists():
                 raise RuntimeError(f"the encoder failed: {err.strip()[-300:]}")
             s = measure_vmaf(out, seg, info, work_dir, gate, target=target)
-            rows.append(SampleRow(at, Path(seg), out.stat().st_size, s, t1 - t0, time.time() - t1))
+            rows.append(SampleRow(at, Path(seg), out.stat().st_size, s, t1 - t0, time.time() - t1, enc_run, last_run()))
             out.unlink()
             ok = ok and s.passes(config.SAMPLE_MARGIN, bar)
         res.rows[i] = rows

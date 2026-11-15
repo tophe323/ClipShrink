@@ -503,7 +503,7 @@ class PlayerWindow(QDialog):
         v.setContentsMargins(0, 0, 0, 8)
         heads = QHBoxLayout()
         codec = config.CODEC_NAMES.get(rec.codec, "H.265")
-        for text in (tr("Original (H.264), shrunk to match") if rec.resized else tr("Original (H.264)"),
+        for text in (tr("Original, shrunk to match") if rec.resized else tr("Original"),
                      tr("Conversion ({codec})").format(codec=codec)):
             lab = QLabel(text)
             lab.setAlignment(Qt.AlignCenter)
@@ -897,7 +897,7 @@ class MainWindow(QMainWindow):
     def _page_scan(self):
         p, v = self._page(N_("Find your videos"),
                           N_("Pick a folder. This tool looks through it and every folder inside it, and lists the "
-                             "H.264 videos it can shrink. Nothing is changed yet."))
+                             "videos it can shrink: H.264, and the older DV and Motion JPEG. Nothing is changed yet."))
         row = QHBoxLayout()
         self.pick_btn = self._button(N_("Choose folder…"), "primary")
         self.pick_btn.clicked.connect(self.choose_folder)
@@ -919,6 +919,11 @@ class MainWindow(QMainWindow):
         v.addWidget(self.scan_note)
         row = QHBoxLayout()
         row.addStretch(1)
+        # For people who already trust the result: straight to Convert, with no test encodes first.
+        self.skip_test = self._button(N_("Skip the test, convert now"))
+        self.skip_test.setEnabled(False)
+        self.skip_test.clicked.connect(self.convert_without_test)
+        row.addWidget(self.skip_test)
         self.to_estimate = self._button(N_("Next: see the saving  →"), "next")
         self.to_estimate.setEnabled(False)
         self.to_estimate.clicked.connect(lambda: self.go(1))
@@ -939,6 +944,7 @@ class MainWindow(QMainWindow):
         self.estimate = None
         self._reset_estimate_view()
         self.to_estimate.setEnabled(False)
+        self.skip_test.setEnabled(False)
         self.pick_btn.setEnabled(False)
         self.scan_bar.setRange(0, 0)
         self.scan_bar.show()
@@ -984,6 +990,7 @@ class MainWindow(QMainWindow):
 
     def _recycle_previews(self, paths):
         self.to_estimate.setEnabled(False)
+        self.skip_test.setEnabled(False)
         self.pick_btn.setEnabled(False)
         self.scan_bar.setRange(0, len(paths))
         self.scan_bar.show()
@@ -1012,7 +1019,7 @@ class MainWindow(QMainWindow):
     @staticmethod
     def scan_note_text(res):
         n = len(res.h264)
-        parts = [ntr("{n} H.264 video, {size}.", "{n} H.264 videos, {size}.", n).format(
+        parts = [ntr("{n} video to convert, {size}.", "{n} videos to convert, {size}.", n).format(
             n=n, size=human_size(sum(f.size for f in res.h264)))]
         n265 = sum(1 for f in res.other if f.codec == "hevc")
         if n265:
@@ -1026,7 +1033,7 @@ class MainWindow(QMainWindow):
             names = ", ".join(Path(p).name for p, _ in res.unreadable[:3]) + ("…" if len(res.unreadable) > 3 else "")
             parts.append(tr("{n} could not be read and were skipped: {names}.").format(n=len(res.unreadable), names=names))
         if not res.h264:
-            parts = [tr("No H.264 videos found in this folder or its subfolders.") + " " + " ".join(parts[1:])]
+            parts = [tr("No videos to convert in this folder or its subfolders.") + " " + " ".join(parts[1:])]
         return " ".join(parts)
 
     def _show_scan(self, res):
@@ -1055,10 +1062,13 @@ class MainWindow(QMainWindow):
         # Everything else in the folder stays visible, with no tick box.
         grey = QColor("#7b8794")
         for i, f in enumerate(res.other, len(res.h264)):
-            name = "H.265" if f.codec == "hevc" else f.codec.upper()
+            name = config.FORMAT_NAMES.get(f.codec, f.codec.upper())
             mine = bool(original_stem(f.path))
-            state = (lambda name=name, mine=mine: tr("Already {codec}, skipped").format(codec=name)
-                     + (" " + tr("(converted by this tool)") if mine else ""))
+            if f.codec in config.MODERN_CODECS:
+                state = (lambda name=name, mine=mine: tr("Already {codec}, skipped").format(codec=name)
+                         + (" " + tr("(converted by this tool)") if mine else ""))
+            else:       # an old or rare format this tool doesn't convert yet
+                state = lambda name=name: tr("{codec} isn't converted by this tool, skipped").format(codec=name)
             vals = [cell(Path(f.path).name, f.path), folder_cell(f.path), size_cell(f.size),
                     cell(f"{f.width}×{f.height} {f.fps:.0f} fps", key=f.width * f.height),
                     cell(clock(f.duration), key=f.duration), cell(state, f.path)]
@@ -1094,6 +1104,7 @@ class MainWindow(QMainWindow):
 
     def _selection_changed(self, *_):
         self.to_estimate.setEnabled(self.can_estimate())
+        self.skip_test.setEnabled(self.can_estimate() and not self.busy)
         self.estimate = None
         self._reset_estimate_view()
 
@@ -1394,6 +1405,19 @@ class MainWindow(QMainWindow):
         self.go(2)
         self.start_batch()
 
+    def convert_without_test(self):
+        """Skips Stage 2: the same conversion and checks, just no saving or time measured beforehand."""
+        files = self.selected_files()
+        if self.busy or not files:
+            return
+        n = len(files)
+        self.live(self.conv_info, lambda: " ".join((
+            ntr("{n} video, {size}.", "{n} videos, {size}.", n).format(n=n, size=human_size(sum(f.size for f in files))),
+            tr("No test encodes were run, so there is no time estimate yet. Your computer will not go to sleep "
+               "while this runs."))))
+        self.go(2)
+        self.start_batch()
+
     def start_batch(self, resume_paths=None):
         paths = resume_paths or [f.path for f in self.selected_files()]
         chosen = self.settings
@@ -1539,6 +1563,7 @@ class MainWindow(QMainWindow):
         self.live(self.scan_note, lambda: "")
         self.scan_table.setRowCount(0)
         self.to_estimate.setEnabled(False)
+        self.skip_test.setEnabled(False)
         self._reset_estimate_view()
         self._fill_conv_table([])
         for t in (self.scan_table, self.est_table, self.conv_table, self.review):
@@ -2351,7 +2376,7 @@ class MainWindow(QMainWindow):
         repo = config.PROJECT_URL.replace("https://", "")
         inner.addWidget(text(lambda: f"{config.APP_NAME} {config.VERSION}", bold=True))
         inner.addWidget(text(lambda: tr(
-            "{app} shrinks H.264 videos to H.265 or AV1 to free up disk space. It measures every conversion against its "
+            "{app} shrinks H.264, DV and Motion JPEG videos to H.265 or AV1 to free up disk space. It measures every conversion against its "
             "original with VMAF and warns you about any below the quality target. Your originals are only read during "
             "conversion, and nothing is sent anywhere.").format(app=config.APP_NAME), hint=True))
         lay = card()

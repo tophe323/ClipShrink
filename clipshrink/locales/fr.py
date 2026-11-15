@@ -13,8 +13,6 @@ MESSAGES = {
     "Choose the folder with your videos": "Choisissez le dossier contenant vos vidéos",
     "No folder chosen": "Aucun dossier choisi",
     "Find your videos": "Trouvez vos vidéos",
-    "Pick a folder. This tool looks through it and every folder inside it, and lists the H.264 videos it can shrink. Nothing is changed yet.":
-        "Choisissez un dossier. L'outil le parcourt, ainsi que tous ses sous-dossiers, et liste les vidéos H.264 qu'il peut réduire. Rien n'est encore modifié.",
     "Next: see the saving  →": "Suivant : voir le gain  →",
     "Reading your videos…": "Lecture de vos vidéos…",
     "File": "Fichier",
@@ -29,7 +27,6 @@ MESSAGES = {
     "Already {codec}, skipped": "Déjà en {codec}, ignorée",
     "(converted by this tool)": "(convertie par cet outil)",
     "{n} could not be read and were skipped: {names}.": "{n} n'ont pas pu être lues et ont été ignorées : {names}.",
-    "No H.264 videos found in this folder or its subfolders.": "Aucune vidéo H.264 trouvée dans ce dossier ni dans ses sous-dossiers.",
     "Delete GoPro LRV files?": "Supprimer les fichiers LRV de la GoPro ?",
     "An LRV file is a small, low-resolution copy that a GoPro records alongside each video, so the camera and its phone app can show quick previews. You don't need it if you have the original video, which is beside each of these.":
         "Un fichier LRV est une petite copie en basse résolution qu'une GoPro enregistre à côté de chaque vidéo, pour que la caméra et son application mobile affichent des aperçus rapides. Vous n'en avez pas besoin si vous avez la vidéo originale, qui se trouve à côté de chacun d'eux.",
@@ -177,8 +174,6 @@ MESSAGES = {
 
     # --- Player
     "Side by side: {name}": "Côte à côte : {name}",
-    "Original (H.264)": "Original (H.264)",
-    "Original (H.264), shrunk to match": "Original (H.264), réduit pour correspondre",
     "Conversion ({codec})": "Conversion ({codec})",
     "Play": "Lecture",
     "◀ Frame": "◀ Image",
@@ -253,8 +248,6 @@ MESSAGES = {
 
     # --- About
     "About {app}": "À propos de {app}",
-    "{app} shrinks H.264 videos to H.265 or AV1 to free up disk space. It measures every conversion against its original with VMAF and warns you about any below the quality target. Your originals are only read during conversion, and nothing is sent anywhere.":
-        "{app} convertit les vidéos H.264 en H.265 ou AV1 pour libérer de l'espace disque. Il mesure chaque conversion par rapport à son original avec VMAF et vous avertit de toute conversion sous l'objectif de qualité. Vos originaux sont seulement lus pendant la conversion, et rien n'est envoyé nulle part.",
     "Documentation:": "Documentation :",
     "Open in your browser": "Ouvrir dans votre navigateur",
     "Copy the link": "Copier le lien",
@@ -362,6 +355,22 @@ MESSAGES = {
     "Output bitrate (Mbit/s)": "Débit de sortie (Mbit/s)",
     "Target average": "Objectif moyen",
     "Target worst 1%": "Objectif pire 1 %",
+    'Skip the test, convert now':
+        'Passer le test, convertir maintenant',
+    'No test encodes were run, so there is no time estimate yet. Your computer will not go to sleep while this runs.':
+        "Aucun encodage test n'a été fait, donc pas encore d'estimation de durée. Votre ordinateur ne se mettra pas en veille pendant ce temps.",
+    'No videos to convert in this folder or its subfolders.':
+        'Aucune vidéo à convertir dans ce dossier ni dans ses sous-dossiers.',
+    'Original, shrunk to match':
+        'Original, réduit pour correspondre',
+    'Pick a folder. This tool looks through it and every folder inside it, and lists the videos it can shrink: H.264, and the older DV and Motion JPEG. Nothing is changed yet.':
+        "Choisissez un dossier. L'outil le parcourt, ainsi que tous ses sous-dossiers, et liste les vidéos qu'il peut réduire : H.264, et les anciens formats DV et Motion JPEG. Rien n'est encore modifié.",
+    "This is {codec}, which this tool doesn't convert, so it was left alone.":
+        "Ce fichier est en {codec}, que cet outil ne convertit pas : il n'a pas été touché.",
+    '{app} shrinks H.264, DV and Motion JPEG videos to H.265 or AV1 to free up disk space. It measures every conversion against its original with VMAF and warns you about any below the quality target. Your originals are only read during conversion, and nothing is sent anywhere.':
+        "{app} convertit les vidéos H.264, DV et Motion JPEG en H.265 ou AV1 pour libérer de l'espace disque. Il mesure chaque conversion par rapport à son original avec VMAF et vous avertit de toute conversion sous l'objectif de qualité. Vos originaux sont seulement lus pendant la conversion, et rien n'est envoyé nulle part.",
+    "{codec} isn't converted by this tool, skipped":
+        "{codec} n'est pas converti par cet outil, ignorée",
 }
 
 PLURALS = {
@@ -372,7 +381,6 @@ PLURALS = {
     "Send it to the Recycle Bin?": ("L'envoyer à la Corbeille ?", "Les envoyer à la Corbeille ?"),
     "Send {n} ticked original to Recycle Bin…": ("Envoyer {n} original coché à la Corbeille…", "Envoyer {n} originaux cochés à la Corbeille…"),
     "about {n} minute": ("environ {n} minute", "environ {n} minutes"),
-    "{n} H.264 video, {size}.": ("{n} vidéo H.264, {size}.", "{n} vidéos H.264, {size}."),
     "{n} LRV file moved to the Recycle Bin.": ("{n} fichier LRV déplacé dans la Corbeille.", "{n} fichiers LRV déplacés dans la Corbeille."),
     "{n} conversion whose original is in the Recycle Bin will take the original's name, for example {name}.":
         ("{n} conversion dont l'original est dans la Corbeille prendra le nom de l'original, par exemple {name}.",
@@ -397,4 +405,7 @@ PLURALS = {
     "⚠ {n} of these has a conversion below the recommended quality (VMAF average {mean}, worst 1% {p1}). Once the original is gone from the Recycle Bin, that lost quality can't be recovered.":
         ("⚠ {n} d'entre eux a une conversion sous la qualité recommandée (VMAF moyen {mean}, pire 1 % {p1}). Une fois l'original sorti de la Corbeille, cette qualité perdue ne peut pas être récupérée.",
          "⚠ {n} d'entre eux ont une conversion sous la qualité recommandée (VMAF moyen {mean}, pire 1 % {p1}). Une fois l'original sorti de la Corbeille, cette qualité perdue ne peut pas être récupérée."),
+    '{n} video to convert, {size}.':
+        ('{n} vidéo à convertir, {size}.',
+         '{n} vidéos à convertir, {size}.'),
 }

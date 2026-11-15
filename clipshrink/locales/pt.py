@@ -13,8 +13,6 @@ MESSAGES = {
     "Choose the folder with your videos": "Escolha a pasta com seus vídeos",
     "No folder chosen": "Nenhuma pasta escolhida",
     "Find your videos": "Encontre seus vídeos",
-    "Pick a folder. This tool looks through it and every folder inside it, and lists the H.264 videos it can shrink. Nothing is changed yet.":
-        "Escolha uma pasta. O programa a percorre junto com todas as subpastas e lista os vídeos H.264 que pode reduzir. Nada é alterado ainda.",
     "Next: see the saving  →": "Próximo: ver a economia  →",
     "Reading your videos…": "Lendo seus vídeos…",
     "File": "Arquivo",
@@ -29,7 +27,6 @@ MESSAGES = {
     "Already {codec}, skipped": "Já em {codec}, ignorado",
     "(converted by this tool)": "(convertido por este programa)",
     "{n} could not be read and were skipped: {names}.": "{n} não puderam ser lidos e foram ignorados: {names}.",
-    "No H.264 videos found in this folder or its subfolders.": "Nenhum vídeo H.264 encontrado nesta pasta ou nas subpastas.",
     "Delete GoPro LRV files?": "Excluir os arquivos LRV da GoPro?",
     "An LRV file is a small, low-resolution copy that a GoPro records alongside each video, so the camera and its phone app can show quick previews. You don't need it if you have the original video, which is beside each of these.":
         "Um arquivo LRV é uma pequena cópia em baixa resolução que a GoPro grava ao lado de cada vídeo, para que a câmera e o aplicativo do celular mostrem prévias rápidas. Você não precisa dele se tiver o vídeo original, que está ao lado de cada um deles.",
@@ -177,8 +174,6 @@ MESSAGES = {
 
     # --- Player
     "Side by side: {name}": "Lado a lado: {name}",
-    "Original (H.264)": "Original (H.264)",
-    "Original (H.264), shrunk to match": "Original (H.264), reduzido para combinar",
     "Conversion ({codec})": "Conversão ({codec})",
     "Play": "Reproduzir",
     "◀ Frame": "◀ Quadro",
@@ -253,8 +248,6 @@ MESSAGES = {
 
     # --- About
     "About {app}": "Sobre o {app}",
-    "{app} shrinks H.264 videos to H.265 or AV1 to free up disk space. It measures every conversion against its original with VMAF and warns you about any below the quality target. Your originals are only read during conversion, and nothing is sent anywhere.":
-        "O {app} reduz vídeos H.264 para H.265 ou AV1 para liberar espaço em disco. Ele mede cada conversão em relação ao original com o VMAF e avisa você sobre qualquer uma abaixo da meta de qualidade. Seus originais são apenas lidos durante a conversão, e nada é enviado para lugar nenhum.",
     "Documentation:": "Documentação:",
     "Open in your browser": "Abrir no navegador",
     "Copy the link": "Copiar o link",
@@ -362,6 +355,22 @@ MESSAGES = {
     "Output bitrate (Mbit/s)": "Taxa de bits de saída (Mbit/s)",
     "Target average": "Meta média",
     "Target worst 1%": "Meta pior 1%",
+    'Skip the test, convert now':
+        'Pular o teste, converter agora',
+    'No test encodes were run, so there is no time estimate yet. Your computer will not go to sleep while this runs.':
+        'Nenhuma codificação de teste foi feita, então ainda não há estimativa de tempo. Seu computador não vai entrar em suspensão enquanto isso.',
+    'No videos to convert in this folder or its subfolders.':
+        'Nenhum vídeo para converter nesta pasta ou nas subpastas.',
+    'Original, shrunk to match':
+        'Original, reduzido para comparar',
+    'Pick a folder. This tool looks through it and every folder inside it, and lists the videos it can shrink: H.264, and the older DV and Motion JPEG. Nothing is changed yet.':
+        'Escolha uma pasta. O programa a percorre junto com todas as subpastas e lista os vídeos que pode reduzir: H.264, e os antigos DV e Motion JPEG. Nada é alterado ainda.',
+    "This is {codec}, which this tool doesn't convert, so it was left alone.":
+        'Este arquivo é {codec}, que este programa não converte, então não foi tocado.',
+    '{app} shrinks H.264, DV and Motion JPEG videos to H.265 or AV1 to free up disk space. It measures every conversion against its original with VMAF and warns you about any below the quality target. Your originals are only read during conversion, and nothing is sent anywhere.':
+        'O {app} reduz vídeos H.264, DV e Motion JPEG para H.265 ou AV1 para liberar espaço em disco. Ele mede cada conversão em relação ao original com o VMAF e avisa você sobre qualquer uma abaixo da meta de qualidade. Seus originais são apenas lidos durante a conversão, e nada é enviado para lugar nenhum.',
+    "{codec} isn't converted by this tool, skipped":
+        '{codec} não é convertido por este programa, ignorado',
 }
 
 PLURALS = {
@@ -372,7 +381,6 @@ PLURALS = {
     "Send it to the Recycle Bin?": ("Enviá-lo para a Lixeira?", "Enviá-los para a Lixeira?"),
     "Send {n} ticked original to Recycle Bin…": ("Enviar {n} original marcado para a Lixeira…", "Enviar {n} originais marcados para a Lixeira…"),
     "about {n} minute": ("cerca de {n} minuto", "cerca de {n} minutos"),
-    "{n} H.264 video, {size}.": ("{n} vídeo H.264, {size}.", "{n} vídeos H.264, {size}."),
     "{n} LRV file moved to the Recycle Bin.": ("{n} arquivo LRV movido para a Lixeira.", "{n} arquivos LRV movidos para a Lixeira."),
     "{n} conversion whose original is in the Recycle Bin will take the original's name, for example {name}.":
         ("{n} conversão cujo original está na Lixeira vai receber o nome do original, por exemplo {name}.",
@@ -397,4 +405,7 @@ PLURALS = {
     "⚠ {n} of these has a conversion below the recommended quality (VMAF average {mean}, worst 1% {p1}). Once the original is gone from the Recycle Bin, that lost quality can't be recovered.":
         ("⚠ {n} deles tem uma conversão abaixo da qualidade recomendada (VMAF médio {mean}, pior 1% {p1}). Quando o original sair da Lixeira, essa qualidade perdida não poderá ser recuperada.",
          "⚠ {n} deles têm uma conversão abaixo da qualidade recomendada (VMAF médio {mean}, pior 1% {p1}). Quando o original sair da Lixeira, essa qualidade perdida não poderá ser recuperada."),
+    '{n} video to convert, {size}.':
+        ('{n} vídeo para converter, {size}.',
+         '{n} vídeos para converter, {size}.'),
 }

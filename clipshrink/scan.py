@@ -1,4 +1,5 @@
-"""Stage 1: walk a folder and its subfolders, list every H.264 video."""
+"""Stage 1: walk a folder and its subfolders, list every video this tool can convert:
+H.264, and the older DV and Motion JPEG formats."""
 import json, os, re
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
@@ -26,6 +27,17 @@ class MediaInfo:
     color_trc: str = ""
     audio_codecs: list = field(default_factory=list)
     video_start: float = 0.0    # seconds after the file's start where the picture begins
+    field_order: str = ""       # tt, bb, tb or bt when the picture is interlaced
+
+    @property
+    def legacy(self):
+        return self.codec in config.LEGACY_CODECS
+
+    @property
+    def deinterlace(self):
+        """Older formats that are interlaced become one frame per field. DV always is, though
+        files rarely say so; its frames carry the field order themselves."""
+        return self.codec == "dvvideo" or (self.legacy and self.field_order in ("tt", "bb", "tb", "bt"))
 
     @property
     def group(self):
@@ -34,7 +46,7 @@ class MediaInfo:
 
 @dataclass
 class ScanResult:
-    h264: list = field(default_factory=list)
+    h264: list = field(default_factory=list)     # every convertible video, not only H.264
     other: list = field(default_factory=list)
     unreadable: list = field(default_factory=list)
     has_conversion: dict = field(default_factory=dict)  # H.264 path -> the conversion beside it
@@ -74,7 +86,7 @@ def probe_file(path):
                      color_space=v.get("color_space", ""), color_primaries=v.get("color_primaries", ""),
                      color_trc=v.get("color_transfer", ""),
                      audio_codecs=[s.get("codec_name") for s in data["streams"] if s["codec_type"] == "audio"],
-                     video_start=start)
+                     video_start=start, field_order=v.get("field_order", ""))
 
 
 _TAGS = re.compile(r"^(?P<stem>.+?)(?:_\((?:4k|1080p|720p)\))?_\((?:h265|av1)\)(?:_\d+)?$|"
@@ -88,7 +100,7 @@ def original_stem(path):
 
 
 def find_conversions(res):
-    """Matches H.264 files with a real H.265 or AV1 file beside them, by name. No memory is involved."""
+    """Matches convertible files with a real H.265 or AV1 file beside them, by name. No memory is involved."""
     beside = {}
     for f in res.other:
         stem = original_stem(f.path)
@@ -162,7 +174,7 @@ def scan_folder(root, on_progress=None, should_stop=None):
         for i, (p, info, err) in enumerate(pool.map(one, paths), 1):
             if info is None:
                 res.unreadable.append((p, err))
-            elif info.codec == "h264":
+            elif info.codec in config.CONVERTIBLE_CODECS:
                 res.h264.append(info)
             else:
                 res.other.append(info)

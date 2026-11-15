@@ -1,6 +1,6 @@
 # History of check runs
 
-Every completed full run while building versions 1.1 to 1.7.2. A "full run" is one execution of `check.bat` (or `python check.py`), which runs the whole test suite and passes only if every test passes; a skipped test counts as a failure. Each run appends a row to `docs/check_history.md`. Your own runs are logged there, and that file stays on your PC.
+Every completed full run while building versions 1.1 to 1.8. A "full run" is one execution of `check.bat` (or `python check.py`), which runs the whole test suite and passes only if every test passes; a skipped test counts as a failure. Each run appends a row to `docs/check_history.md`. Your own runs are logged there, and that file stays on your PC.
 
 For how the tests are organized and how to run them, see [Testing](development/testing.md).
 
@@ -27,3 +27,4 @@ For how the tests are organized and how to run them, see [Testing](development/t
 | 2026-11-07 16:47 | 18.1 min | 341 | 341 | 0 | 0 | PASS | 1.7: rerun after restarting the PC (process listing was taking 7 s) |
 | 2026-11-10 07:08 | 24.7 min | 356 | 356 | 0 | 0 | PASS | 1.7.1: report times and summary, regional CSV, late picture, .MTS, phone durations, VMAF exit code |
 | 2026-11-15 21:16 | 22.9 min | 358 | 358 | 0 | 0 | PASS | 1.7.2: frames an edit list hides are not counted |
+| 2026-11-15 23:21 | 25.0 min | 375 | 375 | 0 | 0 | PASS | 1.8: DV and Motion JPEG, Skip the test, time estimate from start-up and steady speed |

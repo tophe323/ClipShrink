@@ -107,7 +107,7 @@ def test_engine_refuses_a_real_h265_file_even_if_asked(workspace):
     ffmpeg("-f", "lavfi", "-i", "testsrc2=s=320x240:d=0.5", "-c:v", "libx265", "-x265-params", "log-level=error", src)
     before = sha256(src)
     rec = run(src, workspace)
-    assert rec.status == "kept_original" and "not H.264" in rec.reason
+    assert rec.status == "kept_original" and "hevc, which this tool doesn't convert" in rec.reason
     assert rec.encode_runs == 0, "must not spend time encoding it"
     assert only_videos(workspace / "videos") == ["already.mp4"]
     assert sha256(src) == before

@@ -13,8 +13,6 @@ MESSAGES = {
     "Choose the folder with your videos": "Kies de map met je video's",
     "No folder chosen": "Geen map gekozen",
     "Find your videos": "Zoek je video's",
-    "Pick a folder. This tool looks through it and every folder inside it, and lists the H.264 videos it can shrink. Nothing is changed yet.":
-        "Kies een map. Het programma doorzoekt die map en alle submappen, en toont de H.264-video's die het kan verkleinen. Er wordt nog niets gewijzigd.",
     "Next: see the saving  →": "Volgende: besparing bekijken  →",
     "Reading your videos…": "Je video's worden gelezen…",
     "File": "Bestand",
@@ -29,7 +27,6 @@ MESSAGES = {
     "Already {codec}, skipped": "Al {codec}, overgeslagen",
     "(converted by this tool)": "(geconverteerd door dit programma)",
     "{n} could not be read and were skipped: {names}.": "{n} konden niet worden gelezen en zijn overgeslagen: {names}.",
-    "No H.264 videos found in this folder or its subfolders.": "Geen H.264-video's gevonden in deze map of de submappen.",
     "Delete GoPro LRV files?": "GoPro LRV-bestanden verwijderen?",
     "An LRV file is a small, low-resolution copy that a GoPro records alongside each video, so the camera and its phone app can show quick previews. You don't need it if you have the original video, which is beside each of these.":
         "Een LRV-bestand is een kleine kopie in lage resolutie die een GoPro naast elke video opneemt, zodat de camera en de telefoonapp snel voorbeelden kunnen tonen. Je hebt het niet nodig als je de originele video hebt, en die staat naast elk van deze bestanden.",
@@ -177,8 +174,6 @@ MESSAGES = {
 
     # --- Player
     "Side by side: {name}": "Naast elkaar: {name}",
-    "Original (H.264)": "Origineel (H.264)",
-    "Original (H.264), shrunk to match": "Origineel (H.264), verkleind om te passen",
     "Conversion ({codec})": "Conversie ({codec})",
     "Play": "Afspelen",
     "◀ Frame": "◀ Beeld",
@@ -253,8 +248,6 @@ MESSAGES = {
 
     # --- About
     "About {app}": "Over {app}",
-    "{app} shrinks H.264 videos to H.265 or AV1 to free up disk space. It measures every conversion against its original with VMAF and warns you about any below the quality target. Your originals are only read during conversion, and nothing is sent anywhere.":
-        "{app} verkleint H.264-video's naar H.265 of AV1 om schijfruimte vrij te maken. Het meet elke conversie met VMAF tegen het origineel en waarschuwt je voor elke conversie onder het kwaliteitsdoel. Je originelen worden tijdens het converteren alleen gelezen, en er wordt nergens iets heen gestuurd.",
     "Documentation:": "Documentatie:",
     "Open in your browser": "Openen in je browser",
     "Copy the link": "Link kopiëren",
@@ -362,6 +355,22 @@ MESSAGES = {
     "Output bitrate (Mbit/s)": "Uitvoerbitrate (Mbit/s)",
     "Target average": "Doel gemiddelde",
     "Target worst 1%": "Doel slechtste 1%",
+    'Skip the test, convert now':
+        'Test overslaan, nu converteren',
+    'No test encodes were run, so there is no time estimate yet. Your computer will not go to sleep while this runs.':
+        'Er zijn geen testconversies gedaan, dus er is nog geen tijdsinschatting. Je computer gaat niet in slaapstand zolang dit loopt.',
+    'No videos to convert in this folder or its subfolders.':
+        "Geen video's om te converteren in deze map of de submappen.",
+    'Original, shrunk to match':
+        'Origineel, verkleind om te vergelijken',
+    'Pick a folder. This tool looks through it and every folder inside it, and lists the videos it can shrink: H.264, and the older DV and Motion JPEG. Nothing is changed yet.':
+        "Kies een map. Het programma doorzoekt die map en alle submappen, en toont de video's die het kan verkleinen: H.264, en de oudere DV en Motion JPEG. Er wordt nog niets gewijzigd.",
+    "This is {codec}, which this tool doesn't convert, so it was left alone.":
+        'Dit is {codec}, dat dit programma niet converteert, dus het is niet aangeraakt.',
+    '{app} shrinks H.264, DV and Motion JPEG videos to H.265 or AV1 to free up disk space. It measures every conversion against its original with VMAF and warns you about any below the quality target. Your originals are only read during conversion, and nothing is sent anywhere.':
+        "{app} verkleint H.264-, DV- en Motion JPEG-video's naar H.265 of AV1 om schijfruimte vrij te maken. Het meet elke conversie met VMAF tegen het origineel en waarschuwt je voor elke conversie onder het kwaliteitsdoel. Je originelen worden tijdens het converteren alleen gelezen, en er wordt nergens iets heen gestuurd.",
+    "{codec} isn't converted by this tool, skipped":
+        '{codec} wordt niet geconverteerd, overgeslagen',
 }
 
 PLURALS = {
@@ -372,7 +381,6 @@ PLURALS = {
     "Send it to the Recycle Bin?": ("Naar de Prullenbak sturen?", "Ze naar de Prullenbak sturen?"),
     "Send {n} ticked original to Recycle Bin…": ("{n} aangevinkt origineel naar Prullenbak…", "{n} aangevinkte originelen naar Prullenbak…"),
     "about {n} minute": ("ongeveer {n} minuut", "ongeveer {n} minuten"),
-    "{n} H.264 video, {size}.": ("{n} H.264-video, {size}.", "{n} H.264-video's, {size}."),
     "{n} LRV file moved to the Recycle Bin.": ("{n} LRV-bestand naar de Prullenbak verplaatst.", "{n} LRV-bestanden naar de Prullenbak verplaatst."),
     "{n} conversion whose original is in the Recycle Bin will take the original's name, for example {name}.":
         ("{n} conversie waarvan het origineel in de Prullenbak staat, krijgt de naam van het origineel, bijvoorbeeld {name}.",
@@ -397,4 +405,7 @@ PLURALS = {
     "⚠ {n} of these has a conversion below the recommended quality (VMAF average {mean}, worst 1% {p1}). Once the original is gone from the Recycle Bin, that lost quality can't be recovered.":
         ("⚠ {n} hiervan heeft een conversie onder de aanbevolen kwaliteit (VMAF-gemiddelde {mean}, slechtste 1% {p1}). Zodra het origineel uit de Prullenbak weg is, is die verloren kwaliteit niet meer terug te halen.",
          "⚠ {n} hiervan hebben een conversie onder de aanbevolen kwaliteit (VMAF-gemiddelde {mean}, slechtste 1% {p1}). Zodra het origineel uit de Prullenbak weg is, is die verloren kwaliteit niet meer terug te halen."),
+    '{n} video to convert, {size}.':
+        ('{n} video om te converteren, {size}.',
+         "{n} video's om te converteren, {size}."),
 }

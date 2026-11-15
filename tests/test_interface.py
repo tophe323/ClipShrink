@@ -183,8 +183,8 @@ def test_only_h265_files_cannot_move_forward(dark_review, workspace):
     w = dark_review
     t = _scan_page(w, workspace, [], [("b.mp4", "hevc")])
     assert t.rowCount() == 1 and w.selected_files() == []
-    assert not w.to_estimate.isEnabled()
-    assert "No H.264 videos" in w.scan_note.text()
+    assert not w.to_estimate.isEnabled() and not w.skip_test.isEnabled()
+    assert "No videos to convert" in w.scan_note.text()
 
 
 def test_ticks_stay_on_the_right_files_with_skipped_rows_present(dark_review, workspace):
@@ -199,7 +199,7 @@ def test_ticks_stay_on_the_right_files_with_skipped_rows_present(dark_review, wo
 def test_version_is_one_place_and_shown(window):
     from pathlib import Path
     from clipshrink import config
-    assert config.VERSION == "1.7.2"
+    assert config.VERSION == "1.8"
     assert config.VERSION in window.windowTitle()
     iss = (Path(__file__).resolve().parents[1] / "installer" / "clipshrink.iss").read_text(encoding="utf-8")
     assert f"AppVersion={config.VERSION}" in iss
@@ -407,7 +407,8 @@ def test_about_page_says_what_this_is(window):
     window.settings_btn.click()
     t = window.about_text().replace("\n", " ")
     assert window.stack.currentWidget() is window.about_page
-    assert "ClipShrink" in t and "1.7" in t and "GPL" in t and "github.com/tophe323/ClipShrink" in t
+    from clipshrink import config
+    assert "ClipShrink" in t and config.VERSION in t and "GPL" in t and "github.com/tophe323/ClipShrink" in t
     assert "FFmpeg" in t and "mpv" in t
 
 

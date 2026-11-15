@@ -37,7 +37,7 @@ flowchart LR
 | Module | Job |
 | --- | --- |
 | `ui.py` | The desktop interface. Four stages, left to right. |
-| `scan.py` | Stage 1: walks a folder and its subfolders and lists every H.264 video. Uses `config` and `tools`. |
+| `scan.py` | Stage 1: walks a folder and its subfolders and lists every video it can convert: H.264, DV and Motion JPEG. Uses `config` and `tools`. |
 | `estimate.py` | Stage 2: measures expected savings by test-encoding samples of real files. Creates nothing beside the originals. Uses `config`. |
 | `engine.py` | Stage 3: the batch. One file at a time: search, encode, build, verify, deliver. Originals are only read. Uses `config` and `tools`. |
 | `encode.py` | FFmpeg commands: encode, measure VMAF, find the right quality setting. Uses `config` and `tools`. |

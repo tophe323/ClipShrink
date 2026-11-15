@@ -92,7 +92,8 @@ def in_english(fn):
 # "Could not convert, original kept: the encoder stopped: ..." works at both levels.
 REASONS = [N_(t) for t in (
     "Could not convert, original kept: {error}",
-    "This is {codec}, not H.264, so it was left alone.",
+    "This is {codec}, not H.264, so it was left alone.",        # stored by 1.7 and earlier
+    "This is {codec}, which this tool doesn't convert, so it was left alone.",
     "the encoder stopped: {detail}",
     "the encoder failed: {detail}",
     "could not write the file: {detail}",

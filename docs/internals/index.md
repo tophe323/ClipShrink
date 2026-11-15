@@ -6,7 +6,7 @@ ClipShrink is a Python desktop app that drives three bundled programs: **FFmpeg*
 
 ### 1. Scan
 
-The scan walks the folder and every subfolder. It does not enter the Recycle Bin, `System Volume Information`, or Google Drive's temporary folders (`.tmp.drivedownload`, `.tmp.driveupload`). `ffprobe`, FFmpeg's file inspector, reads each video's codec, resolution, frame rate and length. Only H.264 videos are candidates. Files in another codec are listed as skipped, and files that cannot be read are mentioned in the scan summary instead of being hidden.
+The scan walks the folder and every subfolder. It does not enter the Recycle Bin, `System Volume Information`, or Google Drive's temporary folders (`.tmp.drivedownload`, `.tmp.driveupload`). `ffprobe`, FFmpeg's file inspector, reads each video's codec, resolution, frame rate and length. H.264, DV and Motion JPEG videos are candidates. Files in another codec are listed as skipped, and files that cannot be read are mentioned in the scan summary instead of being hidden.
 
 ### 2. Estimate
 
@@ -54,7 +54,7 @@ flowchart TD
 
 Step by step:
 
-1. **Probe.** A file that is not H.264 is left alone and reported. The format, encoder and largest size come from [Settings](../user-guide/settings-and-data.md).
+1. **Probe.** A file that is not H.264, DV or Motion JPEG is left alone and reported. The format, encoder and largest size come from [Settings](../user-guide/settings-and-data.md).
 2. **Find the quality setting.** A binary search on short samples finds the loosest setting whose samples meet the target by a margin. See [Quality](quality.md).
 3. **Encode.** FFmpeg encodes the video track only, keeping every frame timestamp. If the video is bigger than the chosen largest size, it's shrunk here, keeping its shape. Videos are never enlarged.
 4. **Build the file.** For `.mp4`, `.mov`, `.m4v` and `.lrv` files, ClipShrink's own writer swaps the video into the original's structure. Other containers (file formats) are remuxed by FFmpeg, meaning repackaged without re-encoding. See [GoPro data](gopro-data.md).

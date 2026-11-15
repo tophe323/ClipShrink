@@ -2,6 +2,19 @@
 
 Every released version of ClipShrink, newest first. The authoritative file is [CHANGELOG.md on GitHub](https://github.com/tophe323/ClipShrink/blob/main/CHANGELOG.md).
 
+## 1.8 - not released yet
+
+### Added
+- **DV and Motion JPEG videos are converted too.** These older camcorder and camera formats store every frame as a separate picture, so they're very large; converted to H.265 they usually take a sixth of the space or less. DV is deinterlaced, one frame per field, so 25 fps DV becomes smooth 50 fps video. The same quality target and checks apply. `.avi` and `.dv` files become `.mkv`, and the sound is copied unchanged. Raw `.dv` files are now found by the scan.
+- **Skip the test, convert now:** a button on the first page that starts converting straight away, without the test encodes. The conversion and its checks are the same.
+
+### Changed
+- **Formats the tool doesn't convert** now say so, for example "MPEG-4 isn't converted by this tool, skipped", instead of "Already MPEG4, skipped".
+
+### Fixed
+- **The time estimate was about 3.7 times too long.** It counted FFmpeg's start-up, which takes most of a 4-second test sample, as if it applied to every second of video. Start-up and steady speed are now measured apart and added up per file.
+- **VMAF could pair the wrong frames** when the conversion is a `.mkv` and the original isn't, because Matroska rounds frame times to the millisecond. Frames are now paired by the nearest time.
+
 ## 1.7.2 - 2026-11-15
 
 ### Fixed

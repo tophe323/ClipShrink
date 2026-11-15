@@ -56,7 +56,7 @@ In words:
 - **Verified:** everything matches and both numbers meet the target.
 - **Resized:** the same as Verified, for a video shrunk as chosen in Settings. The numbers compare it with a copy of the original at the same size.
 - **Below target:** everything matches and the file is smaller, but the score misses the target even at the strictest setting. The file is delivered with a warning sign. There is no lower limit unless you set a minimum.
-- **Kept original:** the score was below a minimum you set, the video was not H.264, the result was not smaller, the result did not match the original, or VMAF did not compare the same number of frames as the source has. Nothing is delivered.
+- **Kept original:** the score was below a minimum you set, the video was not in a format this tool converts, the result was not smaller, the result did not match the original, or VMAF did not compare the same number of frames as the source has. Nothing is delivered.
 - **Failed:** an error stopped the file (for example the encoder stopped, VMAF could not run, or the original changed during conversion). The original is kept.
 
 ### Details worth knowing

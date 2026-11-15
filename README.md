@@ -6,7 +6,7 @@
 
 **Shrink your videos to free up disk space, without visible quality loss, and measure every one to be sure.**
 
-ClipShrink is a Windows app that batch converts H.264 videos to H.265. It works on any H.264 video and takes special care of GoPro files, keeping their telemetry. You can also choose AV1, or shrink big videos to 4K, 1080p or 720p, in Settings. Every conversion is compared with its original, frame by frame. Any that miss the quality target get a warning sign, so you decide what to keep. If a result isn't smaller, you keep the original and the app tells you.
+ClipShrink is a Windows app that batch converts H.264 videos to H.265, and older DV and Motion JPEG camera videos too. It works on any H.264 video and takes special care of GoPro files, keeping their telemetry. You can also choose AV1, or shrink big videos to 4K, 1080p or 720p, in Settings. Every conversion is compared with its original, frame by frame. Any that miss the quality target get a warning sign, so you decide what to keep. If a result isn't smaller, you keep the original and the app tells you.
 
 ![The Compare and clean up page, listing verified conversions with sizes and quality scores](docs/images/4-compare-and-clean-up.png)
 
@@ -42,7 +42,7 @@ The app opens on a Welcome screen that says what it does, with a **Choose folder
 ![Welcome screen](docs/images/0-welcome.png)
 
 ### 1. Find your videos
-Pick a folder. ClipShrink looks through it and every folder inside it, and lists every H.264 video. Videos that are already H.265 are shown as skipped.
+Pick a folder. ClipShrink looks through it and every folder inside it, and lists every H.264, DV and Motion JPEG video. Videos that are already H.265 are shown as skipped. To convert straight away without the test encodes, click **Skip the test, convert now**.
 
 ![Find videos page](docs/images/1-find-videos.png)
 

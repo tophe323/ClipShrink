@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from .i18n import N_, g, tr
 
 APP_NAME = "ClipShrink"
-VERSION = "1.7.2"
+VERSION = "1.8"
 PROJECT_URL = "https://github.com/tophe323/ClipShrink"
 DOCS_URL = "https://tophe323.github.io/ClipShrink/"
 ADVANCED_DOCS_URL = DOCS_URL + "user-guide/advanced-settings/"
@@ -107,7 +107,14 @@ def target_size(width, height, choice):
     return (max(2, round(width * scale / 2) * 2), max(2, round(height * scale / 2) * 2))
 
 
-VIDEO_EXTS = {".mp4", ".mov", ".m4v", ".mkv", ".avi", ".lrv", ".mts", ".m2ts", ".ts", ".3gp"}
+VIDEO_EXTS = {".mp4", ".mov", ".m4v", ".mkv", ".avi", ".lrv", ".mts", ".m2ts", ".ts", ".3gp", ".dv"}
+# Older camera formats, much larger than H.264 for the same picture. Converted as 8-bit 4:2:0 at
+# limited range, and deinterlaced to one frame per field when the file says it is interlaced.
+LEGACY_CODECS = {"dvvideo", "mjpeg"}
+CONVERTIBLE_CODECS = {"h264"} | LEGACY_CODECS
+FORMAT_NAMES = {"h264": "H.264", "hevc": "H.265", "av1": "AV1", "dvvideo": "DV", "mjpeg": "Motion JPEG",
+               "mpeg2video": "MPEG-2", "mpeg4": "MPEG-4", "vp9": "VP9"}
+MODERN_CODECS = {"hevc", "av1", "vp9"}      # already efficient: skipped as "Already …"
 GRAFT_EXTS = {".mp4", ".mov", ".m4v", ".lrv"}
 SKIP_DIRS = {"$recycle.bin", "system volume information", ".tmp.drivedownload", ".tmp.driveupload"}
 

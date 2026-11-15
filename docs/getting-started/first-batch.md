@@ -10,7 +10,7 @@ When the app opens, a Welcome screen says what it does. Click **Choose folder…
 
 ## 1. Find videos
 
-Click **Choose folder…**. ClipShrink looks through the folder and every folder inside it and lists the H.264 videos it can shrink. Nothing is changed yet.
+Click **Choose folder…**. ClipShrink looks through the folder and every folder inside it and lists the videos it can shrink: H.264, plus the older DV and Motion JPEG. Nothing is changed yet.
 
 ![The Find your videos page listing the videos found in a folder](../images/1-find-videos.png)
 

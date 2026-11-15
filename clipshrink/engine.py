@@ -233,8 +233,8 @@ class Converter:
         gate = self.gate
         src = rec.source
         info = scan.probe_file(src)
-        if info.codec != "h264":
-            raise Verdict(f"This is {info.codec}, not H.264, so it was left alone.")
+        if info.codec not in config.CONVERTIBLE_CODECS:
+            raise Verdict(f"This is {info.codec}, which this tool doesn't convert, so it was left alone.")
         progress(0.0, "search")
         tmp_src_stat = (info.size, info.mtime_ns)
         target = config.target_size(info.width, info.height, self.max_resolution)
@@ -269,7 +269,7 @@ class Converter:
             if code or not video.exists():
                 raise RuntimeError(f"the encoder stopped: {err.strip()[-300:]}")
             built = work / f"built{output_path_for(src, self.codec).suffix}"
-            self._build(src, video, built, gate, bool(target))
+            self._build(src, video, built, gate, bool(target), info)
             progress(base + WEIGHTS["encode"], "verify")
             base2 = base + WEIGHTS["encode"]
 
@@ -295,8 +295,14 @@ class Converter:
             self._finish(rec, best[0], info, best[1], tmp_src_stat, gate)
             progress(1.0, "done")
 
-    def _build(self, src, video, built, gate, resized=False):
-        if Path(src).suffix.lower() in config.GRAFT_EXTS:
+    @staticmethod
+    def _grafts(src, info):
+        """MP4-family H.264 files get their new video track slotted in, keeping everything else
+        byte for byte. Older formats are rewritten by FFmpeg, which copies sound and dates."""
+        return Path(src).suffix.lower() in config.GRAFT_EXTS and not (info and info.legacy)
+
+    def _build(self, src, video, built, gate, resized=False, info=None):
+        if self._grafts(src, info):
             mp4graft.graft(src, video, built, gate.checkpoint, resized=resized)
             return
         code, err = encode.run_ffmpeg(["-y", "-i", video, "-i", src, "-map", "0:v", "-map", "1:a?", "-map", "1:s?",
@@ -315,21 +321,26 @@ class Converter:
             problems.append(f"video is {out.codec}")
         if (out.width, out.height) != (target or (info.width, info.height)):
             problems.append("resolution differs")
-        if out.pix_fmt.replace("yuvj", "yuv") != info.pix_fmt.replace("yuvj", "yuv"):
-            problems.append(f"pixel format differs ({out.pix_fmt} vs {info.pix_fmt})")
-        if out.color_range != info.color_range and info.color_range not in ("", "unknown"):
+        want_pix = "yuv420p" if info.legacy else info.pix_fmt.replace("yuvj", "yuv")
+        if out.pix_fmt.replace("yuvj", "yuv") != want_pix:
+            problems.append(f"pixel format differs ({out.pix_fmt} vs {want_pix})")
+        if out.color_range != encode.out_range(info) and info.color_range not in ("", "unknown"):
             problems.append("colour range differs")
         if out.audio_codecs != info.audio_codecs:
             problems.append("audio tracks differ")
         # Every frame must keep its time. The span from the first frame to the last is compared,
         # not the container's duration, which an encoder's start delay (edit list) can skew.
-        frame = 1 / (info.fps or 30)
+        # Deinterlaced files have one frame per field: twice the frames, the last one half a frame later.
+        per = encode.frames_per_frame(info)
+        frame = 1 / (info.fps or 30) / per
         (nf_a, span_a), (nf_b, span_b) = self._timeline(src), self._timeline(built)
+        span_a += frame * (per - 1)
+        nf_a *= per
         if abs(span_b - span_a) > frame / 2:
             problems.append(f"duration differs ({span_b:.3f}s vs {span_a:.3f}s)")
         if nf_a != nf_b:
             problems.append(f"frame count differs ({nf_b} vs {nf_a})")
-        if Path(src).suffix.lower() in config.GRAFT_EXTS:
+        if self._grafts(src, info):
             if mp4graft.nonvideo_digests(src) != mp4graft.nonvideo_digests(built):
                 problems.append("audio or telemetry tracks changed")
             if mp4graft.udta(src) != mp4graft.udta(built):

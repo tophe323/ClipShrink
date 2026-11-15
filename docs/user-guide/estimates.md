@@ -9,7 +9,7 @@ Step 2 tells you roughly how much space you would save, before a single file is 
 1. Optionally change the format, size, encoder or [advanced values](advanced-settings.md) in [Settings](settings-and-data.md). The estimate follows them.
 2. Click **Run the test encodes**.
 
-ClipShrink picks up to five of your ticked videos, spread across the different resolutions and frame rates in your selection, larger files first within each kind of footage. It cuts a few short pieces from each, converts them, and compares them with the originals. A progress bar shows how many of the files are done. The Convert step stays locked until an estimate exists, and changing **Speed** clears the estimate so you measure again.
+ClipShrink picks up to five of your ticked videos, spread across the different resolutions and frame rates in your selection, larger files first within each kind of footage. It cuts a few short pieces from each, converts them, and compares them with the originals. A progress bar shows how many of the files are done. The Convert step stays locked until an estimate exists (unless you choose **Skip the test, convert now** on the first page), and changing **Speed** clears the estimate so you measure again.
 
 ## What the estimate shows
 

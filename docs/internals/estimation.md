@@ -22,12 +22,12 @@ The samples at the chosen setting are what the estimate uses. If no setting meet
 2. **Ratio per group:** the average of its files' ratios. A group with no sampled file uses the average of all ratios.
 3. **Expected saving:** the sum over all selected files of `video bytes × (1 − group ratio)`. Only video bytes count; audio and other tracks are not part of the saving.
 4. **Range:** the low end uses the highest sampled file ratio in the file's group (or among all samples if the group has none), raised by 20% and capped at 1.0; the high end uses the lowest such ratio, reduced by 20%. The 20% applies to the ratio, not to the saving. The expected value always lies inside it, and the high end cannot exceed the total size.
-5. **Time:** the measured seconds of encoding plus VMAF per second of sample, multiplied by the total duration of all selected files, plus **15%** for each file's own quality search.
+5. **Time:** every FFmpeg run of the test encodes reports two things: how long it took to get going (opening the file, the encoder and the VMAF models) and its steady speed once running. A 4-second sample is mostly start-up, so the two are kept apart. The steady speed becomes seconds per megapixel per second of video, measured separately for each resolution and frame rate the samples cover. Each file then counts its own quality search (as many tries as the samples needed on average, each on 3 four-second pieces, or on the whole file if it's 18 seconds or shorter) and one full encode plus its VMAF check, each with one start-up.
 
 The headline in the app reads "About {saved} saved ({percent}%)", followed by the likely range and the time.
 
 !!! note "Limits"
-    Samples are short pieces, so unusual scenes elsewhere in a file can change the real result. The time estimate counts one encode and VMAF pass at the chosen setting plus the flat 15%, so retries at stricter settings are not modelled.
+    Samples are short pieces, so unusual scenes elsewhere in a file can change the real result. Retries at stricter settings, and the few seconds of reading and writing each file, are not counted. Up to 1.7.2 the time was the samples' total time scaled to the whole selection, which counted start-up for every second of video: on two real batches it came out about 3.7 times too long. Replayed on the same two batches, the new method gave 3.54 h for a batch that took 3.45 h, and 0.72 h for one that took 0.91 h.
 
 ## Accuracy check
 

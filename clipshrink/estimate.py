@@ -1,6 +1,6 @@
 """Stage 2: expected savings, measured by test-encoding samples of real files.
 Nothing beside the originals is created or changed."""
-import shutil
+import shutil, statistics
 from dataclasses import dataclass, field
 from pathlib import Path
 from . import config, encode
@@ -55,7 +55,7 @@ def estimate_savings(files, encoder="auto", work_dir=None, ladder=None, on_progr
     shutil.rmtree(work, ignore_errors=True)
     work.mkdir(parents=True)
     picks = _pick(files, max_files)
-    samples, by_group, speed = [], {}, []
+    samples, by_group, timing = [], {}, []
     hints = {}
     try:
         for n, f in enumerate(picks):
@@ -67,18 +67,16 @@ def estimate_savings(files, encoder="auto", work_dir=None, ladder=None, on_progr
             found = encode.search_quality(segs, encoder, ladder, f, job, guess=hints.get(f.group), gate=gate,
                                           target=config.target_size(f.width, f.height, max_resolution), bar=quality.search_bar())
             hints[f.group] = found.index
+            timing.append((f, found))
             rows = found.rows.get(found.index)
             if rows is None:
                 continue
-            src_total = enc_total = secs = 0
+            src_total = enc_total = 0
             for row in rows:
                 whole = Path(row.segment) == Path(f.path)
                 src_bytes = f.video_bytes if whole else Path(row.segment).stat().st_size
                 src_total += src_bytes
                 enc_total += row.encoded_bytes
-                seg_seconds = f.duration if whole else 4.0
-                secs += seg_seconds
-                speed.append((seg_seconds, row.encode_seconds, row.vmaf_seconds))
                 samples.append(Sample(f.path, row.at, ladder[found.index], src_bytes, row.encoded_bytes,
                                       row.score.mean, row.score.p1, found.passed))
             ratio = enc_total / src_total     # below the bar is still converted, and still saves space
@@ -103,10 +101,44 @@ def estimate_savings(files, encoder="auto", work_dir=None, ladder=None, on_progr
     low = min(low, expected)
     high = min(max(high, expected), total)
 
-    sec_per_media = 0.0
-    if speed:
-        media = sum(s[0] for s in speed) or 1
-        sec_per_media = (sum(s[1] for s in speed) + sum(s[2] for s in speed)) / media
-    # +15% for each file's own quality search
-    seconds = max(1.0, sum(f.duration for f in files) * sec_per_media * 1.15)
+    seconds = max(1.0, conversion_seconds(files, timing))
     return Estimate(total, expected, low, high, seconds, encoder, samples, len(picks))
+
+
+def _mpx(f):
+    return max(0.01, f.width * f.height / 1e6)
+
+
+def conversion_seconds(files, timing):
+    """How long converting every file should take, from the test encodes' own timings.
+    Each FFmpeg run costs a start-up (opening the file, the encoder, the VMAF models) plus
+    a steady speed per second of video, which grows with the picture size. A 4-second
+    sample is mostly start-up, so the two are measured apart and added up per file:
+    the quality search on its samples, then the whole file once, encoded and measured."""
+    starts, rates, rungs = [], {}, []
+    for f, found in timing:
+        rungs.append(max(1, len(found.rows)))
+        for rows in found.rows.values():
+            for row in rows:
+                starts.append(row.encode_run.startup + row.vmaf_run.startup)
+                er, vr = row.encode_run.steady_rate, row.vmaf_run.steady_rate
+                if er and vr:
+                    rates.setdefault(f.group, []).append((er + vr) / _mpx(f))
+    if not starts:
+        return 0.0
+    start = statistics.median(starts)
+    every = [r for v in rates.values() for r in v]
+    if not every:       # every sample too quick to time: fall back to whole runs
+        every = [(r.encode_seconds + r.vmaf_seconds) / (f.duration if Path(r.segment) == Path(f.path) else 4.0) / _mpx(f)
+                 for f, found in timing for rows in found.rows.values() for r in rows]
+    overall = statistics.median(every)
+    tries = statistics.mean(rungs)
+    total = 0.0
+    for f in files:
+        per_second = statistics.median(rates[f.group]) if f.group in rates else overall
+        rate = per_second * _mpx(f)
+        whole = f.duration <= 3 * 4.0 * 1.5          # as encode.cut_segments decides
+        samples, length = (1, f.duration) if whole else (3, 4.0)
+        total += tries * samples * (start + length * rate)      # the quality search
+        total += start + f.duration * rate                      # the conversion and its check
+    return total

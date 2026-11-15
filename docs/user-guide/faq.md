@@ -4,7 +4,7 @@
     No. During conversion your originals are only read. Removing them is a separate, optional step on the compare page that needs you to tick a box in a dialog, and the originals go to the Recycle Bin, not straight to permanent deletion. See [Compare and clean up](compare-and-clean-up.md).
 
 ??? question "Why was a file skipped?"
-    The scan only converts H.264 videos. Anything else is shown greyed out, for example "Already H.265, skipped". Files that could not be read are listed in the note under the table. `.lrv` files (GoPro low-res previews) and files you already converted are listed but not ticked by default; tick them if you want them.
+    The scan converts H.264 videos and the older DV and Motion JPEG formats. Anything else is shown greyed out, for example "Already H.265, skipped" or "MPEG-4 isn't converted by this tool, skipped". Files that could not be read are listed in the note under the table. `.lrv` files (GoPro low-res previews) and files you already converted are listed but not ticked by default; tick them if you want them.
 
 ??? question "Where did my earlier conversions go on Compare and clean up?"
     That page only lists the batch you just ran. Once you exit or click **Start Over**, ClipShrink forgets those files. The conversions stay on disk, each batch's report stays in the reports folder, and you can remove earlier originals yourself.
