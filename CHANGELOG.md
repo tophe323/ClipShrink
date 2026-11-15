@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.2 - 2026-11-15
+
+### Fixed
+- **Some edited videos kept their original** with "frame count differs" by one frame. The original holds a last frame that its own edit list hides, so no player shows it, and the conversion rightly leaves it out. Frames a file hides are no longer counted.
+
 ## 1.7.1 - 2026-11-10
 
 ### Added

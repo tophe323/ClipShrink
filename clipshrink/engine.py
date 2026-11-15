@@ -346,16 +346,23 @@ class Converter:
     @staticmethod
     def _timeline(path):
         """(frames, seconds from the first frame's time to the last's) of the video track.
-        Read from every packet, so MPEG-TS files, which list streams twice, count once."""
-        r = tools.run([tools.ffprobe(), "-v", "error", "-select_streams", "v:0", "-show_entries", "packet=pts_time",
-                       "-of", "csv=p=0", str(path)])
-        times = []
-        for x in r.stdout.split() if r.returncode == 0 else []:
+        Read from every packet, so MPEG-TS files, which list streams twice, count once.
+        Packets flagged D (discard) are left out: the file's edit list hides them, so no
+        player shows them and a conversion rightly leaves them out."""
+        r = tools.run([tools.ffprobe(), "-v", "error", "-select_streams", "v:0", "-show_entries",
+                       "packet=pts_time,flags", "-of", "csv=p=0", str(path)])
+        if r.returncode != 0:
+            return -1, -1.0
+        count, times = 0, []
+        for line in r.stdout.splitlines():
+            pts, _, flags = line.strip().partition(",")
+            if not pts or "D" in flags:
+                continue
+            count += 1
             try:
-                times.append(float(x.strip(",")))
+                times.append(float(pts))
             except ValueError:
-                pass        # a packet without a time ("N/A") still counts below
-        count = sum(1 for x in r.stdout.split() if x.strip(",")) if r.returncode == 0 else -1
+                pass        # a packet without a time ("N/A") still counts
         return count, (max(times) - min(times)) if times else -1.0
 
     def _finish(self, rec, built, info, score, src_stat, gate):

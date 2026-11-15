@@ -543,7 +543,7 @@ def test_translations_say_they_are_unchecked():
         assert "Not yet checked by a native speaker" in head
 
 
-def test_version_is_1_7_1():
+def test_version_is_1_7_2():
     from clipshrink import config
     iss = (ROOT / "installer" / "clipshrink.iss").read_text(encoding="utf-8-sig")
-    assert config.VERSION == "1.7.1" and "AppVersion=1.7.1\n" in iss
+    assert config.VERSION == "1.7.2" and "AppVersion=1.7.2\n" in iss

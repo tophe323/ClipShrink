@@ -54,6 +54,27 @@ def test_a_different_container_duration_alone_does_not_reject(tmp_path, monkeypa
     assert rec.status == "verified", rec.reason
 
 
+def _trimmed(tmp_path):
+    """A clip cut without re-encoding: the frames before the cut stay in the file, flagged
+    D (discard) by its edit list, as some editors also do with a montage's last frame."""
+    src = _mp4(tmp_path / "full.mp4", 4)
+    out = tmp_path / "trimmed.mp4"
+    ffmpeg("-ss", "1.5", "-i", src, "-c", "copy", out)
+    return out
+
+
+def test_frames_the_file_hides_are_not_counted(tmp_path):
+    count, span = Converter._timeline(_trimmed(tmp_path))
+    assert count == 75 and abs(span - 74 / 30) < 0.01
+
+
+def test_a_file_with_hidden_frames_converts(tmp_path):
+    src = _trimmed(tmp_path)
+    rec = _run(src, tmp_path)
+    assert rec.status == "verified", rec.reason
+    assert Converter._timeline(rec.output)[0] == 75
+
+
 def test_frames_that_change_time_are_still_caught(tmp_path, monkeypatch):
     src = _mp4(tmp_path / "a.mp4")
     real = encode.encode_video
