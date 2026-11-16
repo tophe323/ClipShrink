@@ -21,6 +21,7 @@ class SideBySidePlayer:
         self.centre = (0.5, 0.5)    # the middle of the zoomed view, as a fraction of the picture
         self.src_width, self.src_height = width, height
         self.conv_width, self.conv_height = None, None
+        self.tracks = (1, 2)        # mpv's video track numbers for the original and the conversion
 
     def _graph(self):
         w, h = self.conv_width or self.src_width, self.conv_height or self.src_height
@@ -37,7 +38,19 @@ class SideBySidePlayer:
             f = "null"
         # A shrunk conversion: bring the original to the same size so they can sit side by side.
         match = f"scale={w}:{h}:flags=lanczos," if self.conv_width and self.conv_width != self.src_width else ""
-        return f"[vid1]{match}{f}[a];[vid2]{f}[b];[a][b]hstack[vo]"
+        left, right = self.tracks
+        return f"[vid{left}]{match}{f}[a];[vid{right}]{f}[b];[a][b]hstack[vo]"
+
+    @staticmethod
+    def pick_tracks(track_list):
+        """mpv's numbers for the original's picture and the conversion's. Thumbnails count as video
+        tracks too (DJI drones store one in every file), so the first two aren't always the right ones."""
+        moving = [t for t in track_list if t.get("type") == "video" and not t.get("albumart") and not t.get("image")]
+        left = next((t["id"] for t in moving if not t.get("external")), None)
+        right = next((t["id"] for t in moving if t.get("external")), None)
+        if left is None or right is None:
+            raise PlayerError("the video player could not find both pictures")
+        return left, right
 
     def window(self, w=None, h=None):
         """Size and top-left corner of the zoomed window, kept inside the picture."""
@@ -90,6 +103,13 @@ class SideBySidePlayer:
             if time.time() > end or self.proc.poll() is not None:
                 raise PlayerError("the video player could not open these files")
             time.sleep(0.05)
+        tracks = self.pick_tracks(self._get("track-list") or [])
+        if tracks != self.tracks:
+            self.tracks = tracks
+            m = self._cmd("set_property", "lavfi-complex", self._graph())
+            if m.get("error") != "success":
+                raise PlayerError(f"could not show both pictures: {m.get('error')}")
+            self._cmd("seek", 0, "absolute+exact")
         self._settle()
 
     def _cmd(self, *args):

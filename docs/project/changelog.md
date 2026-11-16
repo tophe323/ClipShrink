@@ -2,6 +2,11 @@
 
 Every released version of ClipShrink, newest first. The authoritative file is [CHANGELOG.md on GitHub](https://github.com/tophe323/ClipShrink/blob/main/CHANGELOG.md).
 
+## 1.8.1 - 2026-11-16
+
+### Fixed
+- **Side by side, the conversion stayed on its first picture** for files that hold a thumbnail, such as DJI drone videos. The player showed the original's thumbnail on the right instead of the conversion. It now picks the moving picture in each file. The conversions themselves were fine.
+
 ## 1.8 - 2026-11-16
 
 ### Added

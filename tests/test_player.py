@@ -47,6 +47,33 @@ def test_side_by_side_is_in_sync(get_clip, workspace):
         p.close()
 
 
+def test_a_file_with_a_thumbnail_plays_on_both_sides(get_clip, workspace):
+    """DJI drones store a thumbnail picture in every file, which mpv counts as a video track.
+    The right side showed the original's thumbnail, frozen, instead of the conversion."""
+    from clipshrink.player import SideBySidePlayer
+    clip = get_clip("no_audio_no_telemetry")
+    thumb = workspace / "thumb.jpg"
+    ffmpeg("-f", "lavfi", "-i", "color=c=red:s=1280x720", "-frames:v", 1, thumb)
+    pair = []
+    for name in ("a.mp4", "a_(h265).mp4"):
+        out = workspace / name
+        ffmpeg("-i", clip, "-i", thumb, "-map", 0, "-map", 1, "-c", "copy", "-disposition:v:1", "attached_pic", out)
+        pair.append(out)
+    p = SideBySidePlayer(*pair, mute=True)
+    p.start()
+    try:
+        assert p.tracks == (1, 3)
+        w, h = p.src_width, p.src_height
+        crop_l, crop_r = f"{w}:{h}:0:0", f"{w}:{h}:{w}:0"
+        for t in (0.5, 2.5):
+            p.seek(t)
+            shot = workspace / f"shot_{t}.png"
+            p.screenshot(shot)
+            assert psnr(shot, shot, crop_l, crop_r) > 30, f"left and right differ at {t}s"
+    finally:
+        p.close()
+
+
 def test_player_has_detail_mode(get_clip, workspace):
     from clipshrink.player import SideBySidePlayer
     src = get_clip("uhd_4k_telemetry")

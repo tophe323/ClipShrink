@@ -1,6 +1,6 @@
 # History of check runs
 
-Every completed full run while building versions 1.1 to 1.8. A "full run" is one execution of `check.bat` (or `python check.py`), which runs the whole test suite and passes only if every test passes; a skipped test counts as a failure. Each run appends a row to `docs/check_history.md`. Your own runs are logged there, and that file stays on your PC.
+Every completed full run while building versions 1.1 to 1.8.1. A "full run" is one execution of `check.bat` (or `python check.py`), which runs the whole test suite and passes only if every test passes; a skipped test counts as a failure. Each run appends a row to `docs/check_history.md`. Your own runs are logged there, and that file stays on your PC.
 
 For how the tests are organized and how to run them, see [Testing](development/testing.md).
 
@@ -29,3 +29,4 @@ For how the tests are organized and how to run them, see [Testing](development/t
 | 2026-11-15 21:16 | 22.9 min | 358 | 358 | 0 | 0 | PASS | 1.7.2: frames an edit list hides are not counted |
 | 2026-11-15 23:21 | 25.0 min | 375 | 375 | 0 | 0 | PASS | 1.8: DV and Motion JPEG, Skip the test, time estimate from start-up and steady speed |
 | 2026-11-16 01:16 | 28.6 min | 382 | 382 | 0 | 0 | PASS | 1.8: 1080i camcorder video, fields counted in pairs, leading frames, check ignores stale results |
+| 2026-11-16 22:02 | 23.4 min | 383 | 383 | 0 | 0 | PASS | 1.8.1: side by side shows the conversion, not the original's thumbnail |
