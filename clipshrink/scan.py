@@ -35,9 +35,10 @@ class MediaInfo:
 
     @property
     def deinterlace(self):
-        """Older formats that are interlaced become one frame per field. DV always is, though
-        files rarely say so; its frames carry the field order themselves."""
-        return self.codec == "dvvideo" or (self.legacy and self.field_order in ("tt", "bb", "tb", "bt"))
+        """Interlaced video becomes one frame per field, so it looks right on a computer or a modern
+        TV and compresses well. DV always is interlaced, though files rarely say so; its frames
+        carry the field order themselves. So is 1080i camcorder H.264 (AVCHD), which says so."""
+        return self.codec == "dvvideo" or self.field_order in ("tt", "bb", "tb", "bt")
 
     @property
     def group(self):
@@ -87,6 +88,16 @@ def probe_file(path):
                      color_trc=v.get("color_transfer", ""),
                      audio_codecs=[s.get("codec_name") for s in data["streams"] if s["codec_type"] == "audio"],
                      video_start=start, field_order=v.get("field_order", ""))
+
+
+def stream_start(path):
+    """When the first video track starts, in seconds, as the file says; 0 if it doesn't."""
+    r = tools.run([tools.ffprobe(), "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=start_time",
+                   "-of", "csv=p=0", str(path)])
+    try:
+        return float(r.stdout.strip().splitlines()[0])
+    except (IndexError, ValueError):
+        return 0.0
 
 
 _TAGS = re.compile(r"^(?P<stem>.+?)(?:_\((?:4k|1080p|720p)\))?_\((?:h265|av1)\)(?:_\d+)?$|"

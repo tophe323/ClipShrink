@@ -10,11 +10,16 @@ log = ROOT / "docs" / "check_history.md"
 xml = ROOT / "docs" / ".last_check.xml"
 label = " ".join(sys.argv[1:]) or "(no note)"
 start = datetime.datetime.now()
+xml.unlink(missing_ok=True)     # never read an earlier run's results
 r = subprocess.run([str(py if py.exists() else sys.executable), "-m", "pytest", "tests", "-q", "--tb=short",
                     "-p", "no:cacheprovider", f"--junitxml={xml}", "-o", "junit_family=xunit2"], cwd=ROOT)
-s = ET.parse(xml).getroot()
-s = s if s.tag == "testsuite" else s[0]
-n, f, e, sk = [int(s.get(k)) for k in ("tests", "failures", "errors", "skipped")]
+if xml.exists():
+    s = ET.parse(xml).getroot()
+    s = s if s.tag == "testsuite" else s[0]
+    n, f, e, sk = [int(s.get(k)) for k in ("tests", "failures", "errors", "skipped")]
+else:       # pytest itself stopped (a crash) before writing any results
+    n, f, e, sk = 0, 0, 1, 0
+    label += f" (pytest stopped with code {r.returncode}, no results)"
 ok = r.returncode == 0 and n > 0 and f == 0 and e == 0 and sk == 0
 took = (datetime.datetime.now() - start).seconds / 60
 line = (f"| {start:%Y-%m-%d %H:%M} | {took:.1f} min | {n} | {n - f - e - sk} | "

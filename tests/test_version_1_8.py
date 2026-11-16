@@ -233,3 +233,89 @@ def test_version_is_1_8():
     root = Path(__file__).resolve().parents[1]
     iss = (root / "installer" / "clipshrink.iss").read_text(encoding="utf-8-sig")
     assert config.VERSION == "1.8" and "AppVersion=1.8\n" in iss
+
+
+# --- 1080i camcorder H.264 (AVCHD)
+class _Probe:
+    def __init__(self, out):
+        self.returncode, self.stdout, self.stderr = 0, out, ""
+
+
+def _fake_packets(monkeypatch, lines, start):
+    """What ffprobe reports: packets in file order as "pts,flags", and the track's start time."""
+    import json
+    from clipshrink import encode
+    packets = [{"pts_time": p.split(",")[0], "flags": p.split(",")[1]} for p in lines]
+    out = json.dumps({"packets": packets, "streams": [{"start_time": f"{start:.6f}"}]})
+    monkeypatch.setattr(encode.tools, "run", lambda *a, **k: _Probe(out))
+
+
+def test_one_packet_per_field_counts_as_one_frame(monkeypatch):
+    """1080i camcorders store each field as its own packet, 0.02 s apart at 25 fps."""
+    from clipshrink import encode
+    fields = [f"{2.356 + i * 0.02:.3f},K__" if i == 0 else f"{2.356 + i * 0.02:.3f},___" for i in range(100)]
+    _fake_packets(monkeypatch, fields, 2.356)
+    tl = encode.timeline("x.mts", 25)
+    assert tl.frames == 50 and abs(tl.span - 49 * 0.04) < 1e-6 and tl.lead == 0
+    assert encode.timeline("x.mts").frames == 100        # without the frame rate, nothing is assumed
+
+
+def test_frames_before_the_track_start_are_left_out(monkeypatch):
+    """Leading frames of a group of pictures that began before the recording: timed before
+    the track's start, skipped by players and by FFmpeg's conversion."""
+    from clipshrink import encode
+    frames = ["2.356,K__", "2.276,___", "2.316,___"] + [f"{2.396 + i * 0.04:.3f},___" for i in range(47)]
+    _fake_packets(monkeypatch, frames, 2.356)
+    tl = encode.timeline("x.mts", 25)
+    assert tl.frames == 48 and tl.lead == 2 and abs(tl.span - 47 * 0.04) < 1e-6
+
+
+def test_a_b_frame_shown_before_the_first_packet_still_counts(monkeypatch):
+    """In MP4 the first packet is often a keyframe shown after the next B-frame. That B-frame
+    is inside the track, which starts at the earliest frame shown."""
+    from clipshrink import encode
+    _fake_packets(monkeypatch, ["0.067,K__", "0.000,___", "0.033,___", "0.133,___", "0.100,___"], 0.0)
+    tl = encode.timeline("x.mp4", 30)
+    assert tl.frames == 5 and tl.lead == 0
+
+
+def test_vmaf_skips_the_originals_leading_frames(tmp_path, monkeypatch):
+    """Without the skip, every frame is compared with the one two frames away."""
+    from clipshrink import encode
+    from clipshrink.scan import probe_file
+    clip = tmp_path / "clip.mp4"
+    ffmpeg("-f", "lavfi", "-i", "testsrc2=s=320x240:r=25:d=3", "-c:v", "libx264", "-crf", "10", clip)
+    ref = tmp_path / "ref.mp4"      # the same clip with 2 different frames in front
+    ffmpeg("-f", "lavfi", "-i", "color=c=red:s=320x240:r=25:d=0.08", "-i", clip, "-filter_complex",
+           "[0:v][1:v]concat=n=2:v=1", "-c:v", "libx264", "-crf", "10", ref)
+    real = encode.timeline
+    monkeypatch.setattr(encode, "timeline", lambda p, fps=None: encode.Timeline(75, 2.96, 2) if p == ref else real(p, fps))
+    s = encode.measure_vmaf(clip, ref, probe_file(clip), tmp_path)
+    assert s.frames == 75 and s.mean > 95
+
+
+def _interlaced_h264(path, seconds=3):
+    ffmpeg("-f", "lavfi", "-i", f"testsrc2=s=720x576:r=25:d={seconds}", "-vf", "setfield=tff", "-c:v", "libx264",
+           "-crf", "8", "-flags", "+ildct+ilme", "-x264-params", "tff=1", path)
+    return path
+
+
+def test_interlaced_h264_says_so_and_is_deinterlaced(tmp_path):
+    from clipshrink.scan import probe_file
+    info = probe_file(_interlaced_h264(tmp_path / "a.mp4", 1))
+    assert info.codec == "h264" and info.field_order in ("tt", "tb") and info.deinterlace and not info.legacy
+
+
+def test_interlaced_h264_becomes_50_progressive_frames_a_second(tmp_path):
+    rec = _convert(_interlaced_h264(tmp_path / "a.mp4"), tmp_path)
+    assert rec.status == "verified", rec.reason
+    s = {x["codec_type"]: x for x in probe(rec.output)["streams"]}
+    assert s["video"]["avg_frame_rate"] == "50/1" and s["video"].get("field_order", "progressive") == "progressive"
+    from clipshrink.engine import Converter
+    assert Converter._timeline(rec.output)[0] == 150
+
+
+def test_progressive_h264_is_left_at_its_frame_rate(tmp_path):
+    from clipshrink.scan import probe_file
+    ffmpeg("-f", "lavfi", "-i", "testsrc2=s=320x240:r=25:d=1", "-c:v", "libx264", tmp_path / "a.mp4")
+    assert not probe_file(tmp_path / "a.mp4").deinterlace

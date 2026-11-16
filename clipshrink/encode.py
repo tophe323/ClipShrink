@@ -216,16 +216,66 @@ def _scale(target):
 
 
 def encode_video(src, out, encoder, q, info, gate=None, on_time=None, target=None):
-    """Video track only. Every timestamp is kept: no frames added or dropped."""
+    """Video track only. Every timestamp is kept: no frames added or dropped, except frames from
+    before the track's start, which players skip (see timeline)."""
     # One frame per field needs the filter's finer clock: the original's can't hold half a frame.
     clock = "filter" if getattr(info, "deinterlace", False) else "demux"
     args = ["-y", "-noautorotate", "-i", src, "-map", "0:v:0", "-an", "-sn", "-dn", "-map_metadata", "-1",
             "-fps_mode", "passthrough", "-enc_time_base", clock]
-    steps = picture_filters(info, target)
+    # Left in, they'd be hidden in the .mp4 by an edit list, then shown again once copied to .mkv
+    lead = timeline(src, getattr(info, "fps", None)).lead
+    steps = ([f"trim=start_frame={lead}"] if lead > 0 else []) + picture_filters(info, target)
     if steps:
         args += ["-vf", ",".join(steps)]
     args += encoder_args(encoder, q, info) + [out]
     return run_ffmpeg(args, gate, on_time)
+
+
+@dataclass
+class Timeline:
+    frames: int         # frames a conversion should have, before any deinterlacing
+    span: float         # seconds from the first of those frames to the last
+    lead: int = 0       # frames decoded before the track's start, which a conversion leaves out
+
+
+def timeline(path, fps=None):
+    """The video track's frames, read from every packet, so MPEG-TS files, which list streams
+    twice, count once. Left out, as players and FFmpeg's own conversion leave them out:
+    packets flagged D (discard), which the file's edit list hides, and frames timed before
+    the first packet (camcorders' leading frames from a group of pictures that began before
+    the recording did). Given the frame rate, interlaced video stored as one packet per field
+    (as 1080i camcorders do) counts each pair of fields as one frame."""
+    r = tools.run([tools.ffprobe(), "-v", "error", "-select_streams", "v:0", "-show_entries",
+                   "packet=pts_time,flags:stream=start_time", "-of", "json", str(path)])
+    if r.returncode != 0:
+        return Timeline(-1, -1.0)
+    data = json.loads(r.stdout or "{}")
+    count, times = 0, []
+    for p in data.get("packets", []):
+        if "D" in p.get("flags", ""):
+            continue
+        count += 1
+        try:
+            times.append(float(p["pts_time"]))
+        except (KeyError, ValueError):
+            pass        # a packet without a time ("N/A") still counts
+    if not times:
+        return Timeline(count, -1.0)
+    try:                # where the track officially starts; FFmpeg drops what comes before
+        begin = float(data["streams"][0]["start_time"])
+    except (KeyError, IndexError, ValueError):
+        begin = min(times)
+    early = sum(1 for t in times if t < begin - 1e-6)
+    kept = [t for t in times if t >= begin - 1e-6]
+    count -= early
+    span = max(kept) - min(kept)
+    if fps and len(kept) > 2:
+        ordered = sorted(kept)
+        gaps = sorted(b - a for a, b in zip(ordered, ordered[1:]))
+        gap = gaps[len(gaps) // 2]
+        if 0 < gap < 0.75 / fps:            # half a frame apart: each packet is a field
+            return Timeline((count + 1) // 2, span - gap, (early + 1) // 2)
+    return Timeline(count, span, early)
 
 
 def percentile(values, pct):
@@ -253,7 +303,10 @@ def measure_vmaf(distorted, reference, info, work_dir, gate=None, on_time=None, 
     models = "version=vmaf_v0.6.1\\:name=hd" + ("|version=vmaf_4k_v0.6.1\\:name=uhd" if big else "")
     log = "vmaf.json"
     threads = max(2, (os.cpu_count() or 4) - 2)
-    ref = "".join("," + s for s in picture_filters(info, target))
+    # Skip, by count, the original's frames from before its start, as the conversion did
+    lead = timeline(reference, info.fps).lead
+    ref = (f",trim=start_frame={lead},setpts=PTS-STARTPTS" if lead else "") + "".join(
+        "," + s for s in picture_filters(info, target))
     graph = ("[0:v]setpts=PTS-STARTPTS[d];[1:v]setpts=PTS-STARTPTS" + ref + "[r];"
              # nearest: Matroska rounds times to the millisecond, so 0.033 must still pair with 0.0333
              f"[d][r]libvmaf=log_fmt=json:log_path={log}:n_threads={threads}:ts_sync_mode=nearest:model='{models}'")

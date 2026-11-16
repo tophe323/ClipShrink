@@ -305,7 +305,14 @@ class Converter:
         if self._grafts(src, info):
             mp4graft.graft(src, video, built, gate.checkpoint, resized=resized)
             return
-        code, err = encode.run_ffmpeg(["-y", "-i", video, "-i", src, "-map", "0:v", "-map", "1:a?", "-map", "1:s?",
+        # The picture must start as long after the sound as in the original. The encode keeps that
+        # gap for most files, but loses it when leading frames were skipped, so it is set back here.
+        shift = []
+        if info is not None:
+            gap = info.video_start - scan.stream_start(video)
+            if abs(gap) > 0.001:
+                shift = ["-itsoffset", f"{gap:.6f}"]
+        code, err = encode.run_ffmpeg(["-y", *shift, "-i", video, "-i", src, "-map", "0:v", "-map", "1:a?", "-map", "1:s?",
                                        "-map_metadata", "1", "-c", "copy", built], gate)
         if code:
             raise RuntimeError(f"could not write the file: {err.strip()[-300:]}")
@@ -333,7 +340,7 @@ class Converter:
         # Deinterlaced files have one frame per field: twice the frames, the last one half a frame later.
         per = encode.frames_per_frame(info)
         frame = 1 / (info.fps or 30) / per
-        (nf_a, span_a), (nf_b, span_b) = self._timeline(src), self._timeline(built)
+        (nf_a, span_a), (nf_b, span_b) = self._timeline(src, info.fps), self._timeline(built)
         span_a += frame * (per - 1)
         nf_a *= per
         if abs(span_b - span_a) > frame / 2:
@@ -355,26 +362,10 @@ class Converter:
         return score
 
     @staticmethod
-    def _timeline(path):
-        """(frames, seconds from the first frame's time to the last's) of the video track.
-        Read from every packet, so MPEG-TS files, which list streams twice, count once.
-        Packets flagged D (discard) are left out: the file's edit list hides them, so no
-        player shows them and a conversion rightly leaves them out."""
-        r = tools.run([tools.ffprobe(), "-v", "error", "-select_streams", "v:0", "-show_entries",
-                       "packet=pts_time,flags", "-of", "csv=p=0", str(path)])
-        if r.returncode != 0:
-            return -1, -1.0
-        count, times = 0, []
-        for line in r.stdout.splitlines():
-            pts, _, flags = line.strip().partition(",")
-            if not pts or "D" in flags:
-                continue
-            count += 1
-            try:
-                times.append(float(pts))
-            except ValueError:
-                pass        # a packet without a time ("N/A") still counts
-        return count, (max(times) - min(times)) if times else -1.0
+    def _timeline(path, fps=None):
+        """(frames, seconds from the first frame's time to the last's). See encode.timeline."""
+        tl = encode.timeline(path, fps)
+        return tl.frames, tl.span
 
     def _finish(self, rec, built, info, score, src_stat, gate):
         """The search is over: apply the warning values and the minimum to the result."""

@@ -64,7 +64,7 @@ Camcorders and compact cameras from about 1995 to 2010 often recorded in **DV** 
 
 They're converted with the same quality target and checks as H.264, with these differences:
 
-- **DV is deinterlaced.** DV records two half-pictures (fields) per frame, which show as comb-like lines on a computer or a modern TV. Each field becomes a full frame, so a 25 fps DV video becomes 50 fps and motion stays as smooth as on the original TV. VMAF compares the conversion with the original deinterlaced the same way, so the score measures the encoding only. Motion JPEG is deinterlaced only if the file says it's interlaced; camera files almost never are.
+- **DV is deinterlaced.** DV records two half-pictures (fields) per frame, which show as comb-like lines on a computer or a modern TV. Each field becomes a full frame, so a 25 fps DV video becomes 50 fps and motion stays as smooth as on the original TV. VMAF compares the conversion with the original deinterlaced the same way, so the score measures the encoding only. Motion JPEG is deinterlaced only if the file says it's interlaced; camera files almost never are. The same applies to interlaced HD from camcorders (1080i, often `.MTS` files from about 2006 to 2012): it becomes 50 fps. Those files are often compact already, so at the quality target the conversion isn't always smaller, and then the original is kept.
 - **Colour is stored the standard way.** The conversion is 8-bit 4:2:0 at limited range, like nearly all video, whatever the original used. Colours and brightness look the same.
 - **`.avi` and `.dv` files become `.mkv`**, because MP4 can't hold their uncompressed sound. `.mov` files stay `.mov`. The sound is copied unchanged.
 
