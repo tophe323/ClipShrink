@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.2 - 2026-11-17
+
+### Changed
+- **Side by side, the sound you hear is the conversion's**, not the original's. Listening while you compare also tells you the new file's sound is fine. Files without sound, such as DJI drone videos, stay silent as before.
+
 ## 1.8.1 - 2026-11-16
 
 ### Fixed

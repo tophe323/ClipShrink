@@ -13,7 +13,7 @@ A "Needs your attention" box lists every file that was kept as the original, fai
 1. Click a row in the list.
 2. Click **Play selected side by side**.
 
-The original (H.264) plays on the left and the conversion (H.265 or AV1) on the right, in sync. If the conversion was shrunk, the original is shrunk to match, so the two can sit side by side. The player starts by itself. Press the space bar to pause and resume, whichever button is highlighted. It has **Play/Pause**, **◀ Frame** and **Frame ▶** step buttons, a progress bar and a time label, and it shows the file's VMAF scores. Click anywhere on the progress bar to jump there, or drag its handle.
+The original (H.264) plays on the left and the conversion (H.265 or AV1) on the right, in sync. The sound you hear is the conversion's, so you also hear that the new file's sound is fine. If the conversion was shrunk, the original is shrunk to match, so the two can sit side by side. The player starts by itself. Press the space bar to pause and resume, whichever button is highlighted. It has **Play/Pause**, **◀ Frame** and **Frame ▶** step buttons, a progress bar and a time label, and it shows the file's VMAF scores. Click anywhere on the progress bar to jump there, or drag its handle.
 
 ![Side by side playback of a snowy mountain view, identical on both sides](../images/side-by-side.jpg)
 

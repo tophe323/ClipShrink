@@ -22,6 +22,7 @@ class SideBySidePlayer:
         self.src_width, self.src_height = width, height
         self.conv_width, self.conv_height = None, None
         self.tracks = (1, 2)        # mpv's video track numbers for the original and the conversion
+        self.audio = None           # mpv's number for the conversion's sound track, which is what plays
 
     def _graph(self):
         w, h = self.conv_width or self.src_width, self.conv_height or self.src_height
@@ -51,6 +52,11 @@ class SideBySidePlayer:
         if left is None or right is None:
             raise PlayerError("the video player could not find both pictures")
         return left, right
+
+    @staticmethod
+    def pick_audio(track_list):
+        """mpv's number for the conversion's first sound track, or None if it has none."""
+        return next((t["id"] for t in track_list if t.get("type") == "audio" and t.get("external")), None)
 
     def window(self, w=None, h=None):
         """Size and top-left corner of the zoomed window, kept inside the picture."""
@@ -82,7 +88,7 @@ class SideBySidePlayer:
         cmd = [tools.mpv(), self.original, f"--external-file={self.converted}", "--no-config", "--pause",
                "--keep-open=always", "--hr-seek=yes", "--osc=no", "--input-default-bindings=no", "--input-vo-keyboard=no",
                "--osd-level=0", "--cursor-autohide=no", "--force-window=yes", "--hwdec=auto-copy-safe", "--title=ClipShrink side by side",
-               f"--input-ipc-server={self.pipe}", f"--lavfi-complex={self._graph()}", "--aid=1", "--msg-level=all=error"]
+               f"--input-ipc-server={self.pipe}", f"--lavfi-complex={self._graph()}", "--aid=no","--msg-level=all=error"]
         if self.mute:
             cmd.append("--mute=yes")
         if self.wid is not None:
@@ -103,7 +109,11 @@ class SideBySidePlayer:
             if time.time() > end or self.proc.poll() is not None:
                 raise PlayerError("the video player could not open these files")
             time.sleep(0.05)
-        tracks = self.pick_tracks(self._get("track-list") or [])
+        track_list = self._get("track-list") or []
+        # The conversion's sound, so playing it shows the new file's sound is fine too.
+        self.audio = self.pick_audio(track_list)
+        self._cmd("set_property", "aid", self.audio if self.audio is not None else "no")
+        tracks = self.pick_tracks(track_list)
         if tracks != self.tracks:
             self.tracks = tracks
             m = self._cmd("set_property", "lavfi-complex", self._graph())

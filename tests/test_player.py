@@ -47,6 +47,21 @@ def test_side_by_side_is_in_sync(get_clip, workspace):
         p.close()
 
 
+def test_the_sound_comes_from_the_conversion(get_clip, workspace):
+    """So listening also proves the new file's sound is fine."""
+    from clipshrink.player import SideBySidePlayer
+    src = get_clip("gopro_like_1080p_telemetry")
+    conv = workspace / "a_(h265).mp4"
+    ffmpeg("-i", src, "-map", "0:v:0", "-map", "0:a", "-c", "copy", conv)
+    p = SideBySidePlayer(src, conv, mute=True)
+    p.start()
+    try:
+        current = p._get("current-tracks/audio")
+        assert current and current.get("external") and current["id"] == p.audio
+    finally:
+        p.close()
+
+
 def test_a_file_with_a_thumbnail_plays_on_both_sides(get_clip, workspace):
     """DJI drones store a thumbnail picture in every file, which mpv counts as a video track.
     The right side showed the original's thumbnail, frozen, instead of the conversion."""
