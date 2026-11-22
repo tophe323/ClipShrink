@@ -2,9 +2,24 @@
 search -> encode -> build -> verify -> deliver, and originals are only read."""
 import hashlib, os, shutil, threading, time
 from pathlib import Path
-from . import config, db, encode, mp4graft, reports, scan, tools
+from . import config, db, encode, label, mp4graft, reports, scan, tools
+from .i18n import g
 
 WEIGHTS = {"search": 0.15, "encode": 0.55, "verify": 0.30}
+
+
+def _same_path(a, b):
+    return os.path.normcase(os.path.abspath(a)) == os.path.normcase(os.path.abspath(b))
+
+
+def _free_name(dest):
+    """The first name like `dest` with _2, _3 … that isn't taken."""
+    dest, n = Path(dest), 2
+    while True:
+        cand = dest.with_name(f"{dest.stem}_{n}{dest.suffix}")
+        if not cand.exists():
+            return cand
+        n += 1
 
 
 def sha256_file(path, checkpoint=None):
@@ -86,6 +101,7 @@ class Converter:
         self.gate = encode.Gate()
         self._scope = {}
         self._hints = {}
+        self.replaces = {}      # original -> an earlier conversion to send to the Recycle Bin once its redo is done
         self._recover()
         if only:
             self.add_files(only)
@@ -102,12 +118,18 @@ class Converter:
             for d in self.work_dir.glob("job_*"):
                 shutil.rmtree(d, ignore_errors=True)
 
-    def add_files(self, paths):
+    def add_files(self, paths, redo=None):
+        """redo maps an original to the earlier conversion it is converted again to replace,
+        because it was made with other settings."""
+        redo = redo or {}
         for p in paths:
             p = str(Path(p).resolve() if not isinstance(p, str) else p)
             st = os.stat(p)
             rec = db.get(self.db_path, p)
-            if rec:
+            old = redo.get(p)
+            if old:
+                self.replaces[p] = str(old)
+            elif rec:
                 same = rec.source_size == st.st_size and rec.source_mtime_ns == st.st_mtime_ns
                 keep = same and (rec.status in ("kept_original", "failed", "pending")
                                  or (rec.status in ("verified", "below_bar") and output_intact(rec)))
@@ -385,21 +407,33 @@ class Converter:
         st = os.stat(rec.source)
         if (st.st_size, st.st_mtime_ns) != src_stat:
             raise RuntimeError("the original changed while it was being converted")
-        digest = sha256_file(built, gate.checkpoint)
         size = self.max_resolution if config.target_size(info.width, info.height, self.max_resolution) else None
         dest = output_path_for(rec.source, self.codec, size)
+        old = self.replaces.get(rec.source)     # an earlier conversion this one is made to replace
         n = 2
-        while dest.exists():
+        while dest.exists() and not (old and _same_path(dest, old)):
             dest = dest.with_name(f"{Path(rec.source).stem}{config.output_suffix(self.codec, size)}_{n}{dest.suffix}")
             n += 1
         part = Path(str(dest) + ".part")
-        with open(built, "rb") as a, open(part, "wb") as b:
-            while True:
-                data = a.read(4 << 20)
-                if not data:
-                    break
-                b.write(data)
-                gate.checkpoint()
+        text = label.make(label.Label(
+            version=config.VERSION, codec=self.codec, encoder=self.encoder, quality=g(rec.quality),
+            target_mean=self.quality.warn_mean, target_p1=self.quality.warn_p1, vmaf_mean=score.mean,
+            vmaf_p1=score.p1, original_bytes=st.st_size, saved_bytes=st.st_size - os.path.getsize(built),
+            date=time.strftime("%Y-%m-%d"), original=Path(rec.source).name))
+        if not label.write(built, part, text, gate.checkpoint):
+            with open(built, "rb") as a, open(part, "wb") as b:     # delivered without a label
+                while True:
+                    data = a.read(4 << 20)
+                    if not data:
+                        break
+                    b.write(data)
+                    gate.checkpoint()
+        digest = sha256_file(part, gate.checkpoint)
+        if old and os.path.exists(old):
+            # A redo: the earlier conversion goes to the Recycle Bin, where it can still be restored.
+            from . import trash     # trash imports this module
+            if not trash._send_to_recycle_bin(old) and _same_path(dest, old):
+                dest = _free_name(dest)
         os.replace(part, dest)
         tools.set_file_times(dest, int(st.st_ctime * 1e9), st.st_mtime_ns)
         final = os.stat(dest)

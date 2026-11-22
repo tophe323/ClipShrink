@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from conftest import copy_preserving, real_clips
 from helpers.clips import make_clip
-from helpers.media import FFMPEG, get_times, measure_vmaf, probe, rotation, run, sha256, tracks, udta_bytes, vstream
+from helpers.media import FFMPEG, get_times, measure_vmaf, probe, rotation, run, sha256, tracks, udta_bytes, vstream, camera_info
 from test_quality import assert_conversion_is_good
 
 
@@ -126,7 +126,7 @@ def assert_resized_is_good(src, out, want, ws, codec="hevc"):
     summary = lambda p: sorted((t["id"], t["entry"], t["name"], t["samples"], t["digest"])
                                for t in tracks(p) if t["handler"] != "vide")
     assert summary(src) == summary(out), "sound and telemetry must be untouched"
-    assert udta_bytes(src) == udta_bytes(out)
+    assert camera_info(src) == camera_info(out)
     assert abs(get_times(src)[1] - get_times(out)[1]) < 2
     r = run([FFMPEG, "-v", "error", "-i", str(out), "-map", "0:v", "-f", "null", "-"])
     assert r.returncode == 0 and not r.stderr.strip()

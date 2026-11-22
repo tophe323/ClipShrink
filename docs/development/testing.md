@@ -41,6 +41,7 @@ Every clip there is converted with every available encoder, and all must pass. W
 | `test_settings.py` | Settings saved and restored, bad settings file, encoder fallback, Settings page, Encoding column, Resized label |
 | `test_version_1_7.py` | Open file location, Explorer-style ticking, Settings and About on one page, zoom and dragging, the clickable progress bar, every language complete and switching at once, translated reasons and reports, installer languages |
 | `test_version_1_8.py` | DV and Motion JPEG found and converted (DV deinterlaced to one frame per field, true colours from full-range Motion JPEG, `.mov` rewritten), VMAF pairing rounded frame times, Skip the test, the time estimate's start-up and steady speed |
+| `test_labels.py` | The ClipShrink label: written into MP4 (index first or last) and Matroska with every track unchanged, never over a camera's own comment, on every conversion, renamed conversions found, redo offered for other settings and replacing the earlier conversion |
 | `test_late_picture.py` | Videos whose picture starts after the sound: samples cut where there is a picture, conversion stays in sync |
 | `test_odd_sources.py` | `.MTS` files, phone videos with an encoder start delay, frames an edit list hides, stretched timing still caught, VMAF failures give the exit code |
 | `test_version_1_6_1.py` | Taskbar ID only when run from source, resizable columns, VMAF tooltips, Welcome screen |

@@ -19,6 +19,7 @@ from .estimate import estimate_savings
 from .i18n import N_, g, in_english, ntr, num, reason, tr
 from .player import PlayerError, SideBySidePlayer
 from .scan import original_stem, scan_folder
+from .label import current_settings, describe, differs, previous_settings
 
 STYLE = """
 QWidget { font-family: 'Segoe UI'; font-size: 10.5pt; color: #1f2933; }
@@ -1044,6 +1045,8 @@ class MainWindow(QMainWindow):
         self.scan_table.setSortingEnabled(False)
         self.scan_table.setRowCount(len(res.h264) + len(res.other))
         known = {r.source.lower(): r for r in db.read_records(self.db_path)}
+        others = {f.path.lower(): f for f in res.other}
+        self.redo = {}
         for i, f in enumerate(res.h264):
             rec = known.get(f.path.lower())
             ext = Path(f.path).suffix.lower()
@@ -1052,6 +1055,15 @@ class MainWindow(QMainWindow):
             beside = res.has_conversion.get(f.path)
             if beside and not done:
                 state, done = words("Already has a conversion"), True
+            conv = beside or (rec.output if done and rec.output and os.path.exists(rec.output) else None)
+            if conv:
+                before = previous_settings(f, others.get(conv.lower()), rec if done else None)
+                now = current_settings(f, self.settings)
+                if differs(before, now):
+                    self.redo[f.path] = conv
+                    state = (lambda b=before, n=now: tr("Made with other settings ({before}). Tick it to convert "
+                                                        "again with yours ({now})").format(before=describe(b, n),
+                                                                                         now=describe(n, b)))
             vals = [cell(Path(f.path).name, f.path), folder_cell(f.path), size_cell(f.size),
                     cell(f"{f.width}×{f.height} {f.fps:.0f} fps", key=f.width * f.height),
                     cell(clock(f.duration), key=f.duration),
@@ -1063,8 +1075,13 @@ class MainWindow(QMainWindow):
         grey = QColor("#7b8794")
         for i, f in enumerate(res.other, len(res.h264)):
             name = config.FORMAT_NAMES.get(f.codec, f.codec.upper())
-            mine = bool(original_stem(f.path))
-            if f.codec in config.MODERN_CODECS:
+            mine = bool(original_stem(f.path) or f.label)
+            lab = f.label
+            if f.codec in config.MODERN_CODECS and lab and lab.target:
+                state = (lambda name=name, lab=lab: tr("Already {codec}, skipped").format(codec=name) + " " +
+                         tr("(converted by ClipShrink {version} at {mean} / {p1})").format(
+                             version=lab.version, mean=g(lab.target_mean), p1=g(lab.target_p1)))
+            elif f.codec in config.MODERN_CODECS:
                 state = (lambda name=name, mine=mine: tr("Already {codec}, skipped").format(codec=name)
                          + (" " + tr("(converted by this tool)") if mine else ""))
             else:       # an old or rare format this tool doesn't convert yet
@@ -1433,7 +1450,8 @@ class MainWindow(QMainWindow):
         self._fill_conv_table(paths)
         self.converter = Converter(self.db_path, self.work_dir, encoder=chosen.hardware, codec=chosen.codec,
                                    max_resolution=chosen.max_resolution, quality=chosen.policy(), on_event=lambda ev: self.bridge.call.emit(lambda: self._on_event(ev)))
-        self.converter.add_files(paths)
+        redo = getattr(self, "redo", {})
+        self.converter.add_files(paths, redo={p: redo[p] for p in paths if p in redo})
         for p in paths:
             self._show_row(self.converter.record(p))
 
@@ -2138,6 +2156,8 @@ class MainWindow(QMainWindow):
         if old != key(self.settings):
             self.estimate = None        # the measured saving no longer applies
             self._reset_estimate_view()
+            if self.result is not None and not self.busy:
+                self._show_scan(self.result)    # which conversions were made with other settings changes
         self._apply_settings_view()
 
     def _reset_settings(self):

@@ -1,6 +1,6 @@
 # History of check runs
 
-Every completed full run while building versions 1.1 to 1.8.2. A "full run" is one execution of `check.bat` (or `python check.py`), which runs the whole test suite and passes only if every test passes; a skipped test counts as a failure. Each run appends a row to `docs/check_history.md`. Your own runs are logged there, and that file stays on your PC.
+Every completed full run while building versions 1.1 to 1.9. A "full run" is one execution of `check.bat` (or `python check.py`), which runs the whole test suite and passes only if every test passes; a skipped test counts as a failure. Each run appends a row to `docs/check_history.md`. Your own runs are logged there, and that file stays on your PC.
 
 For how the tests are organized and how to run them, see [Testing](development/testing.md).
 
@@ -32,3 +32,6 @@ For how the tests are organized and how to run them, see [Testing](development/t
 | 2026-11-16 22:02 | 23.4 min | 383 | 383 | 0 | 0 | PASS | 1.8.1: side by side shows the conversion, not the original's thumbnail |
 | 2026-11-17 17:13 | 3.0 min | 0 | -1 | 1 | 0 | FAIL | 1.8.2: Python crashed in Windows (access violation) before any results; rerun below |
 | 2026-11-17 17:16 | 19.5 min | 384 | 384 | 0 | 0 | PASS | 1.8.2: side by side plays the conversion's sound |
+| 2026-11-22 12:25 | 24.0 min | 399 | 393 | 6 | 0 | FAIL | 1.9: new translations put in the wrong list; fixed |
+| 2026-11-22 12:49 | 23.1 min | 399 | 399 | 0 | 0 | PASS | 1.9: ClipShrink label in every conversion, redo with new settings |
+| 2026-11-22 17:47 | 24.1 min | 399 | 399 | 0 | 0 | PASS | 1.9: release run with the version bumped |

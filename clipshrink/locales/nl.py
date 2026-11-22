@@ -371,6 +371,10 @@ MESSAGES = {
         "{app} verkleint H.264-, DV- en Motion JPEG-video's naar H.265 of AV1 om schijfruimte vrij te maken. Het meet elke conversie met VMAF tegen het origineel en waarschuwt je voor elke conversie onder het kwaliteitsdoel. Je originelen worden tijdens het converteren alleen gelezen, en er wordt nergens iets heen gestuurd.",
     "{codec} isn't converted by this tool, skipped":
         '{codec} wordt niet geconverteerd, overgeslagen',
+    'Made with other settings ({before}). Tick it to convert again with yours ({now})':
+        'Gemaakt met andere instellingen ({before}). Vink aan om opnieuw om te zetten met de uwe ({now})',
+    '(converted by ClipShrink {version} at {mean} / {p1})':
+        '(omgezet door ClipShrink {version} op {mean} / {p1})',
 }
 
 PLURALS = {

@@ -2,6 +2,16 @@
 
 Every released version of ClipShrink, newest first. The authoritative file is [CHANGELOG.md on GitHub](https://github.com/tophe323/ClipShrink/blob/main/CHANGELOG.md).
 
+## 1.9 - 2026-11-22
+
+### Added
+- **Every conversion carries a ClipShrink label.** It records the ClipShrink version, the format and encoder, the quality target and the quality level used, the VMAF scores, the original's name and size, and how much space was saved. In an `.mp4`, Windows shows it under Properties > Details > Comments. `.mov` and `.mkv` conversions carry it too, but Windows doesn't show it for those. The label is added only after every check has passed, and the labelled file is checked again to be identical in every track. A comment the camera wrote itself is never replaced; that conversion simply gets no label.
+- **Redo with your new settings.** When a scan finds a conversion made with a different quality target, format or size, it says "Made with other settings" and shows both. It stays unticked. Tick it to convert again from the original; once the new conversion passes every check, the earlier one goes to the Recycle Bin.
+
+### Changed
+- **A conversion you renamed is still recognised**, because its label names the original.
+- **A conversion with no original next to it** now says which ClipShrink version made it and at what quality target.
+
 ## 1.8.2 - 2026-11-17
 
 ### Changed

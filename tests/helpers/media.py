@@ -129,6 +129,13 @@ def udta_bytes(path):
     return m[u[0]:u[1]] if u else b""
 
 
+def camera_info(path):
+    """The camera info (udta payload) with only ClipShrink's own label taken out. Everything the
+    camera wrote must match the original's byte for byte."""
+    from clipshrink import label
+    return label.without_label(udta_bytes(path))     # the payload, without the box header
+
+
 def tracks(path):
     """Return a list of dicts: track id, handler, sample entry, sample digest."""
     m = read_moov(path)

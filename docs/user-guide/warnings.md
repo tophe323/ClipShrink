@@ -24,6 +24,8 @@ These appear in the **State** column while converting and in the **Result** colu
 | Already has a conversion | A real H.265 or AV1 file with this name and a tag is beside it, so it isn't ticked. | Tick it only to convert it again. |
 | Already H.265, skipped (or "Already <CODEC>, skipped") | The video is not H.264. | Nothing. Only H.264 is converted. |
 | (converted by this tool) | A skipped video is a conversion made by ClipShrink. | Nothing. |
+| (converted by ClipShrink 1.9 at 95 / 90) | The same, read from the conversion's [label](finding-videos.md#the-clipshrink-label): the version and quality target it was made with. | Nothing. |
+| Made with other settings | A conversion is beside it, made with another target, format or size than your settings now. | Tick it to [redo it](finding-videos.md#redo-with-new-settings), or leave it. |
 | GoPro low-res preview, off by default | An `.lrv` file, left unticked. | Tick it if you want it converted. |
 | N could not be read and were skipped | Some files could not be read by the scan. The first three names are shown. | Check that those files open elsewhere. |
 | No H.264 videos found in this folder or its subfolders. | The scan found nothing to convert. | Choose another folder. |

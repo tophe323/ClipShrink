@@ -34,7 +34,8 @@ H.264 videos can be converted, and so can two older camera formats, DV and Motio
 | --- | --- | --- |
 | `Ready` | Yes | H.264, DV or Motion JPEG video not converted before |
 | `GoPro low-res preview, off by default` | No | `.lrv` files are GoPro's low-resolution preview versions of clips. Tick them only if you want them shrunk too. See [GoPro LRV files](#gopro-lrv-files). |
-| `Already has a conversion` | No | A real H.265 or AV1 file with this name and a tag such as `_(h265)` is beside it, so it is not queued again by default. Tick it to convert it again. |
+| `Already has a conversion` | No | A real H.265 or AV1 file with this name and a tag such as `_(h265)` is beside it, so it is not queued again by default. Tick it to convert it again. A conversion you renamed is found too, through its [label](#the-clipshrink-label). |
+| `Made with other settings (…). Tick it to convert again with yours (…)` | No | The conversion beside it was made with another quality target, format or picture size than your settings now. Tick it to redo it from the original. See [Redo with new settings](#redo-with-new-settings). |
 | `Verified`, `Original kept` and others | Depends | A result from the batch you're working on, until you exit or click **Start Over**. Verified files are not ticked. |
 | `Already H.265, skipped` | Cannot be ticked | The video is already H.265. AV1 and other formats say so the same way. |
 | `Already VP9, skipped` | Cannot be ticked | VP9 is efficient already, like H.265 and AV1. |
@@ -42,7 +43,27 @@ H.264 videos can be converted, and so can two older camera formats, DV and Motio
 
 ClipShrink decides all this from the files in the folder, with no memory of earlier sessions. So if you restore an H.264 original over its conversion, it simply shows as `Ready`.
 
-Skipped rows are greyed and show a dash instead of a tick box. If a skipped file is a conversion ClipShrink made earlier, the State ends with "(converted by this tool)". That is why your own `_(h265)` files show up as already H.265 and are not converted a second time.
+Skipped rows are greyed and show a dash instead of a tick box. If a skipped file is a conversion ClipShrink made earlier, the State ends with "(converted by this tool)", or, when it has a label, with the version and target it was made with, for example "(converted by ClipShrink 1.9 at 95 / 90)". That is why your own `_(h265)` files show up as already H.265 and are not converted a second time.
+
+## The ClipShrink label
+
+From version 1.9, every conversion carries a short label inside the file. It says:
+
+- the ClipShrink version, the format (H.265 or AV1) and the encoder (NVIDIA card or processor);
+- the quality target it was judged by, for example 95 / 90, and the quality level the search picked (CQ for an NVIDIA card, CRF for the processor; it differs from file to file);
+- its VMAF scores, the original's name and size, how many bytes it saved, and the date.
+
+In an `.mp4` file, Windows shows it in **Properties > Details > Comments**. `.mov` and `.mkv` files have it too, though Windows Explorer doesn't show it for those.
+
+The label is added only after every check has passed, and the file is then checked again: picture, sound and telemetry must be exactly the ones checked. Your originals never get a label; ClipShrink never writes to them. If a file already has a comment of its own, for example from the camera, that comment stays and the conversion gets no label.
+
+Video editors, messaging apps and Google Photos usually drop labels when they save or upload a copy. Google Drive keeps the file as it is. A conversion without a label is still recognised by its name, as before.
+
+### Redo with new settings
+
+If you change the quality target, the format or the picture size in Settings, the next scan compares each conversion's label with your new settings. Those made differently say "Made with other settings" and stay unticked. Tick the ones you want: each is converted again **from its original**, and once the new one has passed every check, the earlier conversion goes to the Recycle Bin, where you can still restore it.
+
+This needs the original. If you already removed it, ClipShrink leaves the conversion alone: converting an H.265 file again would lose quality a second time, and new settings can't bring back detail the first conversion left out.
 
 Files that cannot be read at all are not listed as rows. They are counted in the note under the list, with the first three names.
 

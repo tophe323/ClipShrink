@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from fractions import Fraction
 from pathlib import Path
-from . import config, tools
+from . import config, label, tools
 
 
 @dataclass
@@ -28,6 +28,7 @@ class MediaInfo:
     audio_codecs: list = field(default_factory=list)
     video_start: float = 0.0    # seconds after the file's start where the picture begins
     field_order: str = ""       # tt, bb, tb or bt when the picture is interlaced
+    label: object = None        # a label.Label if this tool made the file, see label.py
 
     @property
     def legacy(self):
@@ -87,7 +88,8 @@ def probe_file(path):
                      color_space=v.get("color_space", ""), color_primaries=v.get("color_primaries", ""),
                      color_trc=v.get("color_transfer", ""),
                      audio_codecs=[s.get("codec_name") for s in data["streams"] if s["codec_type"] == "audio"],
-                     video_start=start, field_order=v.get("field_order", ""))
+                     video_start=start, field_order=v.get("field_order", ""),
+                     label=label.from_tags(data["format"].get("tags")))
 
 
 def stream_start(path):
@@ -111,12 +113,18 @@ def original_stem(path):
 
 
 def find_conversions(res):
-    """Matches convertible files with a real H.265 or AV1 file beside them, by name. No memory is involved."""
+    """Matches convertible files with a real H.265 or AV1 file beside them, by name, or by the name
+    in the conversion's label when it was renamed. No memory is involved."""
     beside = {}
     for f in res.other:
+        if f.codec not in ("hevc", "av1"):
+            continue
+        folder = str(Path(f.path).parent).lower()
+        if f.label and f.label.original:
+            beside.setdefault((folder, Path(f.label.original).stem.lower()), f.path)
         stem = original_stem(f.path)
-        if stem and f.codec in ("hevc", "av1"):
-            beside[(str(Path(f.path).parent).lower(), stem.lower())] = f.path
+        if stem:
+            beside[(folder, stem.lower())] = f.path
     for f in res.h264:
         hit = beside.get((str(Path(f.path).parent).lower(), Path(f.path).stem.lower()))
         if hit:

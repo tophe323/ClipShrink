@@ -44,6 +44,7 @@ flowchart LR
 | `mp4graft.py` | Builds the final file: every box and track of the original, with only the H.264 video swapped for the new H.265 or AV1 video. |
 | `db.py` | The batch's memory (SQLite). Each state change is on disk before work moves on, which makes resume after a crash possible. |
 | `player.py` | Stage 4: side by side playback. One mpv process decodes both files into a single picture. Uses `tools`. |
+| `label.py` | The ClipShrink label inside every conversion: writes it after the checks, proves picture, sound and telemetry unchanged, reads it back for the scan, and compares it with the settings in use. Uses `mp4graft`, `tools`. |
 | `trash.py` | Stage 4: optional cleanup. Only originals with a checked conversion, only with confirmation, only to the Recycle Bin. |
 | `reports.py` | Writes one CSV report per batch. The app never reads them back. Uses `config`. |
 | `tools.py` | Finds the bundled programs (FFmpeg, mpv) and runs them without console windows. Also keeps Windows awake during a batch. |

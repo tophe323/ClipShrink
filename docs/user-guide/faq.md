@@ -16,7 +16,10 @@
     A score from 0 to 100 made by Netflix, for how close a video looks to the original, based on how people see video. At 95 or above, most people can't see a difference. **Worst 1%** is the score of the worst moments: 1% of the video's frames score lower than this, so it catches a short bad patch that a good average would hide. Hover over either column title in the app for a reminder.
 
 ??? question "Why does a file say Already has a conversion?"
-    An H.265 or AV1 file with the same name and a tag such as `_(h265)` is in the same folder. It isn't ticked, so it isn't converted twice. Tick it if you do want to convert it again.
+    An H.265 or AV1 file with the same name and a tag such as `_(h265)` is in the same folder, or one whose ClipShrink label names this file. It isn't ticked, so it isn't converted twice. Tick it if you do want to convert it again.
+
+??? question "How can I tell that a file was made by ClipShrink, and with which settings?"
+    From version 1.9, every conversion has a label inside it with the ClipShrink version, the quality target, the scores and what it saved. For an `.mp4`, right-click it in Windows Explorer and open **Properties > Details > Comments**. See [The ClipShrink label](finding-videos.md#the-clipshrink-label).
 
 ??? question "Why was the original kept?"
     ClipShrink refuses a result that is not smaller than the original, or that does not match it (for example different audio or camera info). The exact reason shows as a tooltip in the Result column and in the "Needs your attention" box. See [Warnings and messages](warnings.md).

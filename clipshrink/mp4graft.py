@@ -374,10 +374,11 @@ def graft(original, encoded, output, checkpoint=None, chunk_seconds=0.5, resized
 
 
 def nonvideo_digests(path, skip_video=True):
-    """Digest of every track except the main video, to prove nothing changed."""
+    """Digest of every track except the main video, to prove nothing changed. With skip_video
+    False, the main video too."""
     moov = read_moov(path)
     out = {}
-    vid_seen = False
+    vid_seen = not skip_video
     with open(path, "rb") as f:
         for t in parse_tracks(moov):
             if t.handler == b"vide" and t.entry in (b"avc1", b"avc3", b"hvc1", b"hev1", b"av01") and not vid_seen:

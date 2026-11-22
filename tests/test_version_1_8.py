@@ -228,11 +228,11 @@ def test_a_short_file_is_searched_whole():
     assert t == pytest.approx(3 * 1 * (2.0 + 10 * 1.0) + (2.0 + 10 * 1.0))
 
 
-def test_version_is_1_8_2():
+def test_version_is_1_9():
     from clipshrink import config
     root = Path(__file__).resolve().parents[1]
     iss = (root / "installer" / "clipshrink.iss").read_text(encoding="utf-8-sig")
-    assert config.VERSION == "1.8.2" and "AppVersion=1.8.2\n" in iss
+    assert config.VERSION == "1.9" and "AppVersion=1.9\n" in iss
 
 
 # --- 1080i camcorder H.264 (AVCHD)

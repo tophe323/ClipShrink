@@ -371,6 +371,10 @@ MESSAGES = {
         '{app} reduce vídeos H.264, DV y Motion JPEG a H.265 o AV1 para liberar espacio en disco. Mide cada conversión frente a su original con VMAF y te avisa de las que queden bajo el objetivo de calidad. Tus originales solo se leen durante la conversión, y no se envía nada a ningún sitio.',
     "{codec} isn't converted by this tool, skipped":
         '{codec} no se convierte con este programa, omitido',
+    'Made with other settings ({before}). Tick it to convert again with yours ({now})':
+        'Hecha con otros ajustes ({before}). Márquela para convertirla de nuevo con los suyos ({now})',
+    '(converted by ClipShrink {version} at {mean} / {p1})':
+        '(convertido por ClipShrink {version} a {mean} / {p1})',
 }
 
 PLURALS = {

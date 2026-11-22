@@ -5,7 +5,8 @@ from fractions import Fraction
 from pathlib import Path
 from conftest import CLIP_SPECS, copy_preserving, real_clips
 from helpers.media import (REQUIRED_VMAF_MEAN, REQUIRED_VMAF_P1, FFMPEG, ffmpeg, get_times, measure_vmaf, probe,
-                           rotation, run, sha256, tracks, udta_bytes, vstream)
+                           rotation, run, sha256, tracks, udta_bytes, vstream, camera_info)
+from clipshrink import label
 
 
 def nvenc_available():
@@ -49,7 +50,8 @@ def assert_conversion_is_good(src, out, log_dir, codec="hevc"):
     summary = lambda p: sorted((t["id"], t["entry"], t["name"], t["samples"], t["digest"])
                                for t in tracks(p) if t["handler"] != "vide")
     assert summary(src) == summary(out), "non-video tracks differ"
-    assert udta_bytes(src) == udta_bytes(out), "camera info (udta) changed"
+    assert camera_info(src) == camera_info(out), "camera info (udta) changed"
+    assert label.read(out) is not None, "the conversion has no ClipShrink label"
     # capture dates
     tags = lambda p: p["format"].get("tags", {}).get("creation_time")
     assert tags(ps) == tags(po), "capture date changed"

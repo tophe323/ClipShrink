@@ -45,7 +45,7 @@ Remembered status goes stale the moment someone changes files outside the app, s
 
 An unfinished batch is the one thing kept, so crash recovery works. Reports are separate and always stay.
 
-Whether a file is already done is decided from the folder. A scan treats an H.264 file as "Already has a conversion" if a real H.265 or AV1 file sits beside it with the same name and a tag such as `_(h265)`, `_(1080p)_(h265)`, `_(h265)_2` or the older `_H265`. A name alone isn't enough, because the file's format is checked too.
+Whether a file is already done is decided from the folder. A scan treats an H.264 file as "Already has a conversion" if a real H.265 or AV1 file sits beside it with the same name and a tag such as `_(h265)`, `_(1080p)_(h265)`, `_(h265)_2` or the older `_H265`. A name alone isn't enough, because the file's format is checked too. From 1.9, a conversion's label (see `label.py`) also names its original, so a renamed conversion is still matched, and the scan compares the label's target, format and picture size with the settings in use to offer a redo.
 
 ## The state database
 
